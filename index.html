@@ -437,7 +437,7 @@ function build(){
     ["拍攝",T.hrs[1],[`直度拍攝 ${P.ratio}，每個鏡頭拍 3 個 take`,"面向窗口或開補光燈，避免背光","先拍「Hook 鏡頭」，最重要嘅一定要拍得好",faceNote(d.face)]],
     ["後期剪輯",T.hrs[2],[`剪到 ${P.len}，1–2 秒換一個鏡頭`,"燒中文字幕（大字、置中偏下）","加品牌 Logo / 片尾 CTA："+cta,"揀封面：大字標題 + 最吸引畫面"]],
     ["發佈",T.hrs[3],[`起步發佈時段：${P.time}（試 2 星期後，按 Insights 粉絲活躍時間調整）`,"Caption 第一句重複 Hook，結尾問一條問題","發佈後 1 小時內回覆所有留言",P.tip]],
-    ["數據檢討",T.hrs[4],[`每週睇一次：${G.kpi}`,"睇完播率：頭 3 秒流失多 → 改 Hook","表現最好嘅一條 → 下週用同一格式再拍","每月總結一次，調整內容支柱比例"]]
+    ["數據檢討",T.hrs[4],[`每週睇一次：${G.kpi}（詳見 SC.07）`,"睇完播率：頭 3 秒流失多 → 改 Hook","表現最好嘅一條 → 下週用同一格式再拍","每月總結一次，調整內容支柱比例"]]
   ];
   const fmts=I.formats;
   $("#out").innerHTML=`
@@ -487,13 +487,13 @@ function build(){
     <div class="week">${DAYS.map((dd,i)=>{const on=F.days.includes(i);const k=F.days.indexOf(i);const p=on?I.pillars[k%4][0]:"";return`<div class="day${on?" on":""}"><span class="d">週${dd}</span>${on?`<span>${p}</span><span class="muted">${P.time.split(" / ")[0]}</span>`:`<span class="muted">${i===0&&d.freq==="w1"?"策劃 + 拍攝":"回覆留言"}</span>`}</div>`}).join("")}</div>
   </section>
   <section class="blk">
-    <div class="two">
-      <div style="display:flex;flex-direction:column;gap:8px"><h3><span class="no">SC.07</span>器材清單</h3><ul class="list">${T.gear.map(g=>`<li>${g}</li>`).join("")}</ul></div>
-      <div style="display:flex;flex-direction:column;gap:8px"><h3><span class="no">SC.08</span>成效指標 KPI</h3><div class="kpi">${[G.kpi,...I.kpi].map(k=>`<span>${k}</span>`).join("")}</div><p class="muted" style="font-size:13px">首 30 日先求穩定出片，第 2 個月先開始比較數據。</p></div>
-    </div>
+    <h3><span class="no">SC.07</span>點樣睇成效</h3>
+    <p class="muted">每星期睇一次以下數字，知道條片有冇幫到生意：</p>
+    <div class="kpi">${[G.kpi,...I.kpi].map(k=>`<span>${k}</span>`).join("")}</div>
+    <p class="muted" style="font-size:13px">首 30 日先求穩定出片，第 2 個月先開始比較數字。</p>
   </section>
   <section class="blk">
-    <h3><span class="no">SC.09</span>行業注意事項</h3>
+    <h3><span class="no">SC.08</span>行業注意事項</h3>
     <div class="warn"><ul class="list">${I.avoid.map(a=>`<li>${a}</li>`).join("")}</ul></div>
   </section>
   ${jvmBlock(d,D)}
@@ -509,7 +509,7 @@ function copySOP(d,steps,fmts){
   L.push("","■ 推薦格式");fmts.forEach(f=>{L.push(`- ${f.n}（${f.len}）Hook：${f.hook}`);f.st.forEach(s=>L.push(`    · ${s}`))});
   L.push("","■ 製作流程");steps.forEach((s,i)=>{L.push(`${i+1}. ${s[0]}`);s[2].forEach(x=>L.push(`    · ${x}`))});
   L.push("","■ 鏡頭清單");I.shots.forEach((s,i)=>L.push(`${i+1}. ${s[0]}｜${s[1]}｜${s[2]}秒`));
-  L.push("","■ 器材",...T.gear.map(g=>"- "+g),"","■ KPI："+[G.kpi,...I.kpi].join("、"),"","■ 注意事項",...I.avoid.map(a=>"- "+a));
+  L.push("","■ 點樣睇成效："+[G.kpi,...I.kpi].join("、"),"","■ 注意事項",...I.avoid.map(a=>"- "+a));
   const D=diagnose(d);
   L.push("","■ 現況診斷",...D.findings.map(f=>`- ${f.k}：${f.t}`));
   L.push("","■ 建議下一步："+recText(D.rec),"  原因："+D.why.join("；"));
@@ -531,7 +531,7 @@ function jvmBlock(d,D){
   const order=D.rec==="pilot"?["pilot","diag"]:["diag","pilot"];
   const msg=encodeURIComponent(`你好，我係${d.biz}（${I.n}），用咗拍片 SOP 配對器，想了解「${D.rec==="pilot"?JVM.pilot.n:JVM.diag.n}」。`);
   const c=JVM.cases[d.ind];
-  const map=[["定位","對應 DX 診斷 + SC.01"],["支柱","對應 SC.02 內容支柱"],["產出","對應 SC.03–SC.05，JVM 每月 2 次上門批量拍 + 剪"],["承接","片尾 CTA 同私訊話術，JVM 提供範本"],["復盤","對應 SC.08 KPI，JVM 每月出報告"]];
+  const map=[["定位","對應 DX 診斷 + SC.01"],["支柱","對應 SC.02 內容支柱"],["產出","對應 SC.03–SC.05，JVM 每月 2 次上門批量拍 + 剪"],["承接","片尾 CTA 同私訊話術，JVM 提供範本"],["復盤","對應 SC.07 成效數字，JVM 每月出報告"]];
   return`<section class="blk jvm" id="jvm">
     <h3><span class="no">JVM</span>${JVM.name} 可以點幫你</h3>
     <div class="recbox">
