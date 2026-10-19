@@ -3,210 +3,108 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>拍片 SOP 配對器</title>
+<title>拍片題材配對器</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;500;700&family=Noto+Serif+HK:wght@700;900&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-/* Layout: call-sheet tool — intake form on the left (sticky), generated production SOP on the right, styled like a film call sheet with slate numbers and timecodes */
+/* Layout: one column — pick industry (big tiles) → video ideas → JVM offer. Built for business owners reading on a phone. */
 :root{
   --bg:#f3f5f7; --paper:#ffffff; --ink:#15202b; --muted:#5d6b78; --line:#d9dfe5;
   --accent:#c8102e; --accent-soft:#fbe7ea; --slate:#1d2b38; --slate-fg:#f3f5f7; --chip:#eaeef2;
-  --good:#1f7a4d;
   --display:"Noto Serif HK","Songti TC",serif;
   --body:"Noto Sans HK","PingFang HK","Microsoft JhengHei",system-ui,sans-serif;
   --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0f151b; --paper:#172029; --ink:#e7ecf0; --muted:#94a3b0; --line:#2a3743;
-  --accent:#ff4d63; --accent-soft:#3a1a20; --slate:#e7ecf0; --slate-fg:#0f151b; --chip:#22303c; --good:#4cc38a; color-scheme:dark}}
+  --accent:#ff4d63; --accent-soft:#3a1a20; --slate:#e7ecf0; --slate-fg:#0f151b; --chip:#22303c; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f151b; --paper:#172029; --ink:#e7ecf0; --muted:#94a3b0; --line:#2a3743;
-  --accent:#ff4d63; --accent-soft:#3a1a20; --slate:#e7ecf0; --slate-fg:#0f151b; --chip:#22303c; --good:#4cc38a; color-scheme:dark}
+  --accent:#ff4d63; --accent-soft:#3a1a20; --slate:#e7ecf0; --slate-fg:#0f151b; --chip:#22303c; color-scheme:dark}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.7}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.65}
-.wrap{max-width:1240px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;margin-bottom:24px}
-.brand{display:flex;flex-direction:column;gap:4px}
-.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;display:flex;align-items:center;gap:8px}
-.rec{width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 1.6s infinite}
+.wrap{max-width:860px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--muted);display:flex;align-items:center;gap:8px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 1.6s infinite}
 @keyframes blink{50%{opacity:.25}}
-@media (prefers-reduced-motion:reduce){.rec{animation:none}}
-h1{font-family:var(--display);font-weight:900;font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:0;text-wrap:balance}
-.sub{color:var(--muted);margin:0;max-width:60ch}
-.grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:24px;align-items:start}
-@media (max-width:880px){.grid{grid-template-columns:minmax(0,1fr)}}
-form.intake{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
-@media (max-width:880px){form.intake{position:static}}
-form.intake h2{font-family:var(--display);font-size:20px;margin:0}
-.field{display:flex;flex-direction:column;gap:6px}
-.field label,.field .lbl{font-size:13px;font-weight:700}
-.field small{color:var(--muted);font-size:12px;font-weight:400}
-input[type=text],select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 10px;width:100%}
-textarea{min-height:64px;resize:vertical}
-input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.seg{display:flex;flex-wrap:wrap;gap:6px}
-.seg input{position:absolute;opacity:0;pointer-events:none}
-.seg label{font-weight:500;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;background:var(--bg)}
-.seg input:checked+label{background:var(--slate);color:var(--slate-fg);border-color:var(--slate)}
-.seg input:focus-visible+label{outline:2px solid var(--accent);outline-offset:2px}
-.btn{font:inherit;font-weight:700;border:0;border-radius:6px;padding:11px 16px;cursor:pointer;background:var(--accent);color:#fff}
-.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
-.btn:disabled{opacity:.5;cursor:default}
-
-/* Output: call sheet */
-.sheet{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0}
-.slate{background:var(--slate);color:var(--slate-fg);padding:18px 22px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 18px}
-@media (max-width:640px){.slate{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.slate .k{font-family:var(--mono);font-size:11px;letter-spacing:.1em;opacity:.7;text-transform:uppercase}
-.slate .v{font-weight:700;font-size:15px;line-height:1.35;overflow-wrap:anywhere}
-.slate .title{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;border-bottom:1px dashed currentColor;padding-bottom:12px;margin-bottom:2px}
-.slate .title b{font-family:var(--display);font-size:clamp(20px,3vw,28px);font-weight:900}
-.slate .title span{font-family:var(--mono);font-size:12px;opacity:.8}
-.actions{display:flex;flex-wrap:wrap;gap:8px;padding:14px 22px;border-bottom:1px solid var(--line)}
-section.blk{padding:22px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
-section.blk:last-child{border-bottom:0}
-.blk h3{margin:0;font-family:var(--display);font-size:20px;display:flex;align-items:baseline;gap:10px}
-.blk h3 .no{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:700}
-.blk p{margin:0;max-width:68ch}
+@media (prefers-reduced-motion:reduce){.dot{animation:none}}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(30px,6vw,46px);line-height:1.15;margin:6px 0 8px;text-wrap:balance}
+h2{font-family:var(--display);font-size:clamp(20px,3.6vw,26px);margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:0;max-width:56ch}
+.step{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:700;letter-spacing:.08em}
+.head{display:flex;flex-direction:column;gap:4px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.tiles button{font:inherit;font-weight:700;font-size:15px;text-align:left;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;min-height:52px;line-height:1.35}
+.tiles button[aria-pressed="true"]{background:var(--slate);color:var(--slate-fg);border-color:var(--slate)}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.namebox{display:flex;flex-direction:column;gap:6px;max-width:420px}
+.namebox label{font-size:14px;font-weight:700}
+input[type=text]{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.why{background:var(--slate);color:var(--slate-fg);border-radius:10px;padding:16px 18px;font-weight:700;font-size:17px}
+.why small{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;opacity:.7;font-weight:500}
+.ideas{display:flex;flex-direction:column;gap:12px}
+.idea{border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.idea .top{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px}
+.idea .no{font-family:var(--mono);font-weight:700;color:var(--accent)}
+.idea .name{font-weight:700;font-size:18px}
+.tag{font-family:var(--mono);font-size:12px;background:var(--chip);border-radius:4px;padding:2px 6px}
+.hook{border-left:3px solid var(--accent);padding-left:12px;font-size:16px}
+.hook b{display:block;font-size:12px;color:var(--muted);font-weight:500}
+details{font-size:15px}
+summary{cursor:pointer;color:var(--muted);font-size:14px}
+details ol{margin:6px 0 0;padding-left:20px}
+.more{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.more div{background:var(--bg);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:2px;font-size:14px}
+.more b{font-size:15px}
 .muted{color:var(--muted)}
-.pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
-.pillar{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
-.pillar .pct{font-family:var(--mono);font-weight:700;font-size:22px;color:var(--accent);font-variant-numeric:tabular-nums}
-.pillar .bar{height:4px;background:var(--chip);border-radius:2px;overflow:hidden}
-.pillar .bar i{display:block;height:100%;background:var(--accent)}
-.formats{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
-.fmt{background:var(--bg);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
-.fmt .name{font-weight:700;font-size:16px}
-.tag{font-family:var(--mono);font-size:11px;background:var(--chip);border-radius:4px;padding:2px 6px;align-self:flex-start}
-.hook{border-left:3px solid var(--accent);padding-left:10px;font-weight:500}
-.fmt ol{margin:0;padding-left:18px;font-size:14px}
-.steps{display:flex;flex-direction:column;gap:0}
-.step{display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;padding:12px 0;border-top:1px dashed var(--line)}
-.step:first-child{border-top:0}
-.step .tc{font-family:var(--mono);font-size:12px;color:var(--muted);padding-top:3px}
-.step .tc b{display:block;color:var(--accent);font-size:13px}
-.step ul{margin:4px 0 0;padding-left:18px;font-size:14px}
-.tablewrap{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;font-weight:700}
-td.mono{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
-.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
-@media (max-width:640px){.week{grid-template-columns:repeat(4,minmax(0,1fr))}}
-.day{border:1px solid var(--line);border-radius:6px;padding:8px;min-height:78px;font-size:12px;display:flex;flex-direction:column;gap:4px}
-.day .d{font-family:var(--mono);font-weight:700;font-size:11px;color:var(--muted)}
-.day.on{border-color:var(--accent);background:var(--accent-soft)}
-.day.on .d{color:var(--accent)}
-.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-.list{margin:0;padding-left:18px}
-.warn{background:var(--accent-soft);border-radius:8px;padding:12px 14px;font-size:14px}
-.kpi{display:flex;flex-wrap:wrap;gap:8px}
-.kpi span{background:var(--chip);border-radius:999px;padding:4px 10px;font-size:13px}
-.ai-out{background:var(--bg);border-radius:8px;padding:14px;white-space:pre-wrap;font-size:14px;min-height:48px}
-.finds{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-.finds li{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:10px;align-items:baseline;font-size:14px}
-.finds .pill{font-family:var(--mono);font-size:11px;font-weight:700;border-radius:4px;padding:1px 6px;color:#fff;background:var(--accent)}
-.finds .ok .pill{background:var(--good)}
-.jvm{background:var(--bg)}
-.recbox{background:var(--slate);color:var(--slate-fg);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
-.recbox .k{font-family:var(--mono);font-size:11px;letter-spacing:.1em;opacity:.7}
-.recbox .recname{font-family:var(--display);font-size:20px;font-weight:900}
-.recbox .muted{color:inherit;opacity:.8;font-size:13px}
+.note{font-size:14px;color:var(--muted);margin:0}
+.warn{background:var(--accent-soft);border-radius:8px;padding:12px 16px;font-size:15px}
+.warn ul{margin:4px 0 0;padding-left:20px}
+.jvm{background:var(--slate);color:var(--slate-fg);border-color:var(--slate)}
+.jvm .muted,.jvm .note{color:inherit;opacity:.75}
 .offers{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
-.offer{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
-.offer.main{border:2px solid var(--accent)}
-.offer .oname{font-weight:700;font-size:16px}
+.offer{background:var(--paper);color:var(--ink);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.offer .oname{font-weight:700;font-size:17px}
 .price{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
-.price b{font-family:var(--mono);font-size:26px;color:var(--accent)}
-.price s{color:var(--muted);font-size:13px}
-.fivep{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-@media (max-width:760px){.fivep{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.fivep>div{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:2px;font-size:13px;min-width:0}
-.fivep .n{font-family:var(--mono);color:var(--accent);font-weight:700;font-size:12px}
-.fivep small{color:var(--muted);font-size:12px;border-top:1px dashed var(--line);padding-top:4px;margin-top:4px}
+.price b{font-family:var(--mono);font-size:28px;color:var(--accent)}
+.price s{color:var(--muted);font-size:14px}
+.offer ul{margin:0;padding-left:20px;font-size:15px}
+.offer .terms{font-size:13px;color:var(--muted);margin:0}
 .contact{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.contact a.btn{text-decoration:none}
-.sel{user-select:all;font-family:var(--mono);font-size:13px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:8px 10px;overflow-wrap:anywhere}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--slate);color:var(--slate-fg);padding:10px 16px;border-radius:6px;font-size:14px}
-footer{margin-top:20px;color:var(--muted);font-size:12px;font-family:var(--mono)}
+.btn{font:inherit;font-weight:700;border:0;border-radius:8px;padding:12px 18px;cursor:pointer;background:var(--accent);color:#fff;text-decoration:none;display:inline-block}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.jvm .btn.ghost{color:inherit;border-color:currentColor}
+.sel{user-select:all;font-family:var(--mono);font-size:14px;border:1px solid currentColor;border-radius:8px;padding:10px 12px;overflow-wrap:anywhere;opacity:.9}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--slate);color:var(--slate-fg);padding:10px 16px;border-radius:8px;font-size:14px}
+footer{color:var(--muted);font-size:12px;font-family:var(--mono);line-height:1.8}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header class="top">
-    <div class="brand">
-      <div class="eyebrow"><span class="rec" aria-hidden="true"></span>JVM 內容行銷 · 商會會員版</div>
-      <h1>拍片 SOP 配對器</h1>
-      <p class="sub">輸入你嘅行業同資源，即刻配對出一份屬於你行業嘅拍片標準作業流程：拍乜、點拍、幾時出、點睇成效。</p>
-    </div>
+  <header class="head">
+    <div class="eyebrow"><span class="dot" aria-hidden="true"></span>JVM 內容行銷 · 商會會員版</div>
+    <h1>你嘅行業，應該拍乜片？</h1>
+    <p class="sub">揀你嘅行業，即刻睇到最適合你嘅拍片題材。拍攝同剪輯交俾 JVM 就得。</p>
   </header>
 
-  <div class="grid">
-    <form class="intake" id="f" autocomplete="off">
-      <h2>公司資料</h2>
-      <div class="field">
-        <label for="biz">公司 / 品牌名稱</label>
-        <input type="text" id="biz" value="陳記茶餐廳">
-        <small>以下已填示例資料，請改成你自己公司</small>
-      </div>
-      <div class="field">
-        <label for="ind">行業</label>
-        <select id="ind"></select>
-      </div>
-      <div class="field">
-        <label for="aud">目標客人 <small>（年齡、身份、地區）</small></label>
-        <input type="text" id="aud" value="觀塘上班族、25–45歲">
-      </div>
-      <div class="field">
-        <label for="usp">你最大嘅賣點 <small>（一句講晒）</small></label>
-        <textarea id="usp">四十年老字號，自家製菠蘿油同港式奶茶</textarea>
-      </div>
-      <div class="field">
-        <span class="lbl">拍片主要目標</span>
-        <div class="seg" id="goal"></div>
-      </div>
-      <div class="field">
-        <label for="plat">主力平台</label>
-        <select id="plat"></select>
-      </div>
-      <div class="field">
-        <span class="lbl">製作資源</span>
-        <div class="seg" id="team"></div>
-      </div>
-      <div class="field">
-        <span class="lbl">出片頻率</span>
-        <div class="seg" id="freq"></div>
-      </div>
-      <div class="field">
-        <span class="lbl">老闆 / 員工肯唔肯出鏡？</span>
-        <div class="seg" id="face"></div>
-      </div>
-      <h2 style="margin-top:8px">現況診斷</h2>
-      <div class="field">
-        <span class="lbl">社交媒體現況</span>
-        <div class="seg" id="stage"></div>
-      </div>
-      <div class="field">
-        <span class="lbl">而家最大困難</span>
-        <div class="seg" id="pain"></div>
-      </div>
-      <div class="field">
-        <span class="lbl">每星期可以抽幾多時間做內容？</span>
-        <div class="seg" id="time"></div>
-      </div>
-      <div class="field">
-        <span class="lbl">每月可以放幾多預算落宣傳？</span>
-        <div class="seg" id="budget"></div>
-      </div>
-      <button class="btn" type="submit">分析 + 生成 SOP</button>
-    </form>
+  <section class="head" style="gap:12px">
+    <span class="step">第 1 步</span>
+    <h2>揀你嘅行業</h2>
+    <div class="tiles" id="tiles" role="group" aria-label="行業"></div>
+    <div class="namebox">
+      <label for="biz">公司名稱（可以唔填）</label>
+      <input type="text" id="biz" placeholder="例如：陳記茶餐廳">
+    </div>
+  </section>
 
-    <div class="sheet" id="out" aria-live="polite"></div>
-  </div>
-  <footer>由 JVM 內容行銷提供｜WhatsApp 9634 7605｜Justvibingmedia8@gmail.com｜IG @justvibing_media<br>SOP 內容按一般行業做法整理，唔係保證成效；發佈前請按自身情況及行業守則調整。</footer>
+  <section class="panel" id="result" aria-live="polite"></section>
+
+  <section class="panel jvm" id="jvm"></section>
+
+  <footer>由 JVM 內容行銷提供｜WhatsApp 9634 7605｜Justvibingmedia8@gmail.com｜IG @justvibing_media<br>題材按一般行業做法整理，唔代表保證成效。</footer>
 </div>
 <div class="toast" id="toast" hidden></div>
 
@@ -330,28 +228,7 @@ const IND = {
     avoid:["Before / After 必須同一機位、同一時間光線","業主單位資料（地址、門牌）要遮走"],
     cta:"私訊預約免費度尺"},
 };
-const GOALS={awareness:{n:"品牌曝光",mix:[35,20,30,15],kpi:"觸及人數 & 追蹤增長",cta:"追蹤我哋，下星期仲有"},
-  leads:{n:"引客查詢",mix:[30,25,15,30],kpi:"私訊 / 查詢數",cta:null},
-  sales:{n:"直接銷售",mix:[30,20,10,40],kpi:"轉化 & 營業額",cta:null},
-  hiring:{n:"招聘人才",mix:[15,20,50,15],kpi:"應徵人數",cta:"想加入我哋？私訊「應徵」"}};
-const PLATS={ig:{n:"Instagram Reels",ratio:"9:16",len:"15–45秒",time:"12:00–13:00 / 20:00–22:00",tip:"頭 3 秒定生死，封面要有大字標題；加 3–5 個本地 hashtag。"},
-  xhs:{n:"小紅書",ratio:"3:4 或 9:16",len:"30–90秒",time:"19:00–23:00",tip:"封面標題最重要，用「攻略 / 實測 / 推介」字眼；內文寫足關鍵字方便搜尋。"},
-  fb:{n:"Facebook",ratio:"4:5 或 9:16",len:"30–60秒",time:"12:00–14:00 / 21:00",tip:"一定要燒字幕，大部分人靜音睇；適合 35 歲以上客群。"},
-  yt:{n:"YouTube Shorts",ratio:"9:16",len:"30–60秒",time:"18:00–21:00",tip:"標題寫清楚關鍵字，Shorts 可以帶人去睇長片。"},
-  tiktok:{n:"TikTok / 抖音",ratio:"9:16",len:"15–35秒",time:"19:00–22:00",tip:"用熱門聲音，節奏要快，1–2 秒一個鏡頭。"},
-  li:{n:"LinkedIn",ratio:"1:1 或 4:5",len:"30–90秒",time:"平日 08:00–10:00",tip:"B2B 首選，以老闆 / 專業人士個人帳號發佈效果更好。"}};
-const TEAMS={solo:{n:"一個人 + 手機",gear:["手機（4K 30fps，鏡頭抹乾淨）","手機三腳架 + 藍牙遙控","領夾咪","一盞 LED 補光燈","剪輯：CapCut / InShot"],hrs:[1,1,1.5,.25,.25]},
-  small:{n:"2–3 人小團隊",gear:["手機或無反相機","手機穩定器","無線咪一對二","兩盞 LED 燈 + 柔光","剪輯：CapCut / Premiere","共用 Google Drive 素材庫"],hrs:[1.5,2,2,.5,.5]},
-  agency:{n:"外判製作公司",gear:["由製作公司提供","你準備：拍攝場地、產品、出鏡人員","Brief 文件（目標、訊息、參考片）","審片時間表（兩輪修改為限）"],hrs:[2,3,0,.5,.5]}};
-const FREQ={w1:{n:"每週 1 條",days:[3]},w3:{n:"每週 2–3 條",days:[1,3,5]},daily:{n:"每日 1 條",days:[0,1,2,3,4,5,6]}};
-const FACE={yes:{n:"願意出鏡"},voice:{n:"只出聲"},no:{n:"完全唔出鏡"}};
-const DAYS=["一","二","三","四","五","六","日"];
-const STAGE={none:{n:"未有帳號"},rare:{n:"有帳號但好少更新"},active:{n:"有穩定更新"}};
-const PAIN={time:{n:"冇時間拍"},idea:{n:"唔知拍乜"},convert:{n:"有片但冇查詢"},edit:{n:"唔識拍 / 剪"}};
-const TIME={t1:{n:"2 小時以下",h:1.5},t2:{n:"2–5 小時",h:4},t3:{n:"5 小時以上",h:7}};
-const BUDGET={b1:{n:"$2,000 以下",v:1500},b2:{n:"$2,000–6,000",v:4000},b3:{n:"$6,000–10,000",v:8000},b4:{n:"$10,000 以上",v:12000}};
 
-/* JVM 內容行銷 — 資料來自《JVM 商會會員內容行銷先導計劃》簡報及 JVM BP */
 const JVM={
   name:"JVM 內容行銷",tagline:"媒體創作 × 內容獲客系統",
   founder:"浩銘 Ho Ming（JVM Founder）",
@@ -359,200 +236,78 @@ const JVM={
   fivep:[["定位","工作坊釐清你嘅獨特定位同目標客群"],["支柱","定出 3–5 條核心內容主題"],["產出","批量拍攝與剪輯製作短片"],["承接","流量導向查詢並按需求跟進"],["復盤","每月檢視表現，持續優化方向"]],
   diag:{n:"IP 行業拍攝診斷",price:"$600",orig:"$1,200",unit:"首次",items:["診斷你盤生意嘅 IP 定位同內容方向","拍一條 60 秒內宣傳短片，即刻可以用嚟經營社交媒體","分享你行業可以點樣用 AI Agent 幫生意"]},
   pilot:{n:"商會會員先導方案",price:"$6,000",unit:"每月起",items:["每月 2 次上門拍攝（批量拍攝）","每月 4–5 條 30–45 秒短片，發佈喺 IG Reels + Facebook","首月 60 分鐘定位工作坊（首批會員豁免起步費）","剪輯：字幕、配樂、hashtag 建議","私域承接：CTA 話術範本，將流量導向實際查詢","每月 1 份成效報告（觸及、留言、查詢數）"],terms:"最少 3 個月｜首批 15 位會員，先到先得"},
-  cases:{beauty:"髮型師個人 IP",food:"咖啡店商戶 IP",health:"痛症治療室商戶 IP",fitness:"痛症治療室商戶 IP"}
+  cases:{beauty:"髮型師個人 IP",food:"咖啡店商戶 IP",health:"痛症治療室商戶 IP"}
 };
 
-/* 診斷：每個結論都列出由邊個答案推導出嚟 */
-function diagnose(d){
-  const T=TEAMS[d.team],perMonth={w1:4,w3:10,daily:30}[d.freq];
-  const perVideo=T.hrs.reduce((a,b)=>a+b,0);
-  const batch=d.team==="agency"?0:perVideo*0.6; // 一次過拍幾條，策劃同拍攝可以攤分
-  const needWeek=d.team==="agency"?1:Math.round((batch*perMonth/4.3)*10)/10;
-  const haveWeek=TIME[d.time].h;
-  const gap=needWeek>haveWeek;
-  const budget=BUDGET[d.budget].v;
-  const findings=[];
-  findings.push({k:"時間",ok:!gap,t:d.team==="agency"?"外判製作，你主要負責審片同回覆留言。":`按「${T.n}」+「${FREQ[d.freq].n}」，估計每星期要用大約 ${needWeek} 小時；你揀咗可以抽「${TIME[d.time].n}」。${gap?"時間唔夠，好容易拍兩個星期就停。":"時間足夠，關鍵係固定拍攝日。"}`});
-  if(d.stage==="none")findings.push({k:"起步",ok:false,t:"未有帳號：先唔好急住追頻率，第一步係定位，諗清楚講咩、講俾邊個聽。"});
-  if(d.stage==="rare")findings.push({k:"持續性",ok:false,t:"有帳號但好少更新：通常唔係唔識拍，係冇固定流程同冇人負責。下面 SOP 要定死邊日拍、邊日出。"});
-  if(d.stage==="active")findings.push({k:"持續性",ok:true,t:"已經有穩定更新：重點放喺「承接」，即係點樣將觀眾變成查詢。"});
-  const painT={time:"冇時間：建議一個月集中一日批量拍攝，或者交俾人拍。",idea:"唔知拍乜：用下面「內容支柱」輪住拍，唔使每次重新諗。",convert:"有片冇查詢：問題多數喺片尾冇清楚 CTA、冇留言關鍵字、冇人跟進私訊。",edit:"唔識拍 / 剪：由最簡單嘅格式開始（手機 + 字幕），或者交俾專業團隊。"};
-  findings.push({k:"痛點",ok:false,t:painT[d.pain]});
-  if(d.face==="no")findings.push({k:"出鏡",ok:true,t:"唔出鏡都做得，但較難建立「人」嘅信任，可以考慮老闆只出聲。"});
 
-  // 推薦路線
-  let rec,why=[];
-  const canPilot=budget>=6000;
-  if((gap||d.pain==="time"||d.pain==="edit"||d.team==="agency")&&canPilot){
-    rec="pilot";
-    if(gap)why.push("你可抽嘅時間少過所需時間");
-    if(d.pain==="time")why.push("你最大困難係冇時間");
-    if(d.pain==="edit")why.push("你唔想自己拍剪");
-    if(d.team==="agency")why.push("你本身打算外判");
-    why.push(`你預算「${BUDGET[d.budget].n}」，夠先導方案每月 $6,000 起`);
-  }else if(d.stage==="none"||d.pain==="idea"||d.pain==="convert"||!canPilot){
-    rec="diag";
-    if(d.stage==="none")why.push("你未有帳號，最需要先定位");
-    if(d.pain==="idea")why.push("你唔肯定拍乜方向");
-    if(d.pain==="convert")why.push("你有片但冇查詢，要先搵出問題");
-    if(!canPilot)why.push(`你預算「${BUDGET[d.budget].n}」，可以先用 $600 試`);
-    if(gap)why.push("時間唔夠，可以用診斷時拍嘅 60 秒片頂住先");
-  }else{
-    rec="diy";why.push("你有時間、有方向，可以先跟 SOP 自己做");
-  }
-  return{findings,rec,why,needWeek,haveWeek,perMonth};
-}
 
 const $=s=>document.querySelector(s);
-function fillSelect(el,obj,val){el.innerHTML=Object.entries(obj).map(([k,v])=>`<option value="${k}"${k===val?" selected":""}>${v.n}</option>`).join("")}
-function fillSeg(el,name,obj,val){el.innerHTML=Object.entries(obj).map(([k,v])=>`<input type="radio" name="${name}" id="${name}-${k}" value="${k}"${k===val?" checked":""}><label for="${name}-${k}">${v.n}</label>`).join("")}
-fillSelect($("#ind"),IND,"food");fillSelect($("#plat"),PLATS,"ig");
-fillSeg($("#goal"),"goal",GOALS,"leads");fillSeg($("#team"),"team",TEAMS,"solo");
-fillSeg($("#freq"),"freq",FREQ,"w3");fillSeg($("#face"),"face",FACE,"yes");
-fillSeg($("#stage"),"stage",STAGE,"rare");fillSeg($("#pain"),"pain",PAIN,"time");
-fillSeg($("#time"),"time",TIME,"t1");fillSeg($("#budget"),"budget",BUDGET,"b3");
-
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const val=n=>(document.querySelector(`input[name=${n}]:checked`)||{}).value;
-function read(){return{biz:$("#biz").value.trim()||"你的品牌",ind:$("#ind").value,aud:$("#aud").value.trim()||"目標客人",usp:$("#usp").value.trim(),goal:val("goal"),plat:$("#plat").value,team:val("team"),freq:val("freq"),face:val("face"),stage:val("stage"),pain:val("pain"),time:val("time"),budget:val("budget")}}
-const hm=h=>h<1?`${Math.round(h*60)}分鐘`:`${h}小時`;
+let cur="food";
 
-function faceNote(face){
-  if(face==="no")return"全部改用「手部特寫 + 字幕 + 背景音樂」或「產品 / 環境畫面 + AI 配音」，唔使任何人露面。";
-  if(face==="voice")return"用旁白代替對鏡講嘢：畫面拍手部、產品、環境，後期配你把聲。";
-  return"盡量由同一位人物固定出鏡，觀眾會慢慢認得你，建立熟悉感。";
+$("#tiles").innerHTML=Object.entries(IND).map(([k,v])=>`<button type="button" data-k="${k}" aria-pressed="${k===cur}">${v.n}</button>`).join("");
+$("#tiles").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;cur=b.dataset.k;
+  document.querySelectorAll("#tiles button").forEach(x=>x.setAttribute("aria-pressed",x===b));render();
+  $("#result").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"})});
+$("#biz").addEventListener("input",renderJVM);
+
+function render(){
+  const I=IND[cur];
+  $("#result").innerHTML=`
+    <span class="step">第 2 步</span>
+    <h2>${I.n}：最適合拍呢 3 種片</h2>
+    <div class="why"><small>你行業嘅重點</small>${I.pain}</div>
+    <div class="ideas">${I.formats.map((f,i)=>`
+      <div class="idea">
+        <div class="top"><span class="no">題材 ${i+1}</span><span class="name">${f.n}</span><span class="tag">${f.len}</span></div>
+        <div class="hook"><b>開頭第一句可以咁講</b>${esc(f.hook)}</div>
+        <details><summary>點樣拍（JVM 會幫你拍）</summary><ol>${f.st.map(s=>`<li>${s}</li>`).join("")}</ol></details>
+      </div>`).join("")}</div>
+    <p class="note">［ ］入面請填你自己嘅真實資料。</p>
+    <h2 style="font-size:19px">之後可以輪住拍嘅題目</h2>
+    <div class="more">${I.pillars.map(p=>`<div><b>${p[0]}</b><span class="muted">${p[1]}</span></div>`).join("")}</div>
+    <div class="warn"><b>要小心</b><ul>${I.avoid.map(a=>`<li>${a}</li>`).join("")}</ul></div>
+    <div><button class="btn ghost" type="button" id="copy">複製題材，WhatsApp 俾自己</button></div>`;
+  $("#copy").onclick=copy;
+  renderJVM();
 }
 
-let last=null;
-function build(){
-  const d=read();last=d;
-  const I=IND[d.ind],G=GOALS[d.goal],P=PLATS[d.plat],T=TEAMS[d.team],F=FREQ[d.freq];
-  const cta=G.cta||I.cta;
-  const D=diagnose(d);
-  const perMonth={w1:4,w3:10,daily:30}[d.freq];
-  const shotTotal=I.shots.reduce((a,s)=>a+s[2],0);
-  const today=new Date();const code=`SOP-${d.ind.toUpperCase()}-${String(today.getMonth()+1).padStart(2,"0")}${String(today.getDate()).padStart(2,"0")}`;
-  const steps=[
-    ["前期策劃",T.hrs[0],["由下面「內容支柱」揀今週主題，按比例分配",`寫 Hook：頭 3 秒一句，參考格式範例`,`列鏡頭清單（約 ${I.shots.length} 個鏡頭），準備道具 / 場地`,d.team==="agency"?"出 Brief 俾製作公司，確認拍攝日":"一次過計劃 3–4 條片，集中一日拍晒"]],
-    ["拍攝",T.hrs[1],[`直度拍攝 ${P.ratio}，每個鏡頭拍 3 個 take`,"面向窗口或開補光燈，避免背光","先拍「Hook 鏡頭」，最重要嘅一定要拍得好",faceNote(d.face)]],
-    ["後期剪輯",T.hrs[2],[`剪到 ${P.len}，1–2 秒換一個鏡頭`,"燒中文字幕（大字、置中偏下）","加品牌 Logo / 片尾 CTA："+cta,"揀封面：大字標題 + 最吸引畫面"]],
-    ["發佈",T.hrs[3],[`起步發佈時段：${P.time}（試 2 星期後，按 Insights 粉絲活躍時間調整）`,"Caption 第一句重複 Hook，結尾問一條問題","發佈後 1 小時內回覆所有留言",P.tip]],
-    ["數據檢討",T.hrs[4],[`每週睇一次：${G.kpi}（詳見 SC.07）`,"睇完播率：頭 3 秒流失多 → 改 Hook","表現最好嘅一條 → 下週用同一格式再拍","每月總結一次，調整內容支柱比例"]]
-  ];
-  const fmts=I.formats;
-  $("#out").innerHTML=`
-  <div class="slate">
-    <div class="title"><b>${esc(d.biz)}</b><span>${code}</span></div>
-    <div><div class="k">行業</div><div class="v">${I.n}</div></div>
-    <div><div class="k">目標</div><div class="v">${G.n}</div></div>
-    <div><div class="k">平台</div><div class="v">${P.n}</div></div>
-    <div><div class="k">產量</div><div class="v">${F.n}（每月約 ${perMonth} 條）</div></div>
-  </div>
-  <div class="actions">
-    <button class="btn ghost" type="button" id="copy">複製成份 SOP</button>
-  </div>
-  <section class="blk diag">
-    <h3><span class="no">DX</span>現況診斷</h3>
-    <ul class="finds">${D.findings.map(f=>`<li class="${f.ok?"ok":"bad"}"><span class="pill">${f.ok?"OK":"留意"}</span><b>${f.k}</b><span>${f.t}</span></li>`).join("")}</ul>
-    <p class="muted" style="font-size:13px">時間係按下面製作流程嘅估算時數計，批量拍攝已攤分；只作規劃參考。</p>
-  </section>
-  <section class="blk">
-    <h3><span class="no">SC.01</span>行業重點</h3>
-    <p><strong>${I.pain}</strong></p>
-    <p class="muted">目標客人：${esc(d.aud)}${d.usp?`　·　核心賣點：${esc(d.usp)}`:""}</p>
-  </section>
-  <section class="blk">
-    <h3><span class="no">SC.02</span>內容支柱 · 建議起步比例</h3>
-    <div class="pillars">${I.pillars.map((p,i)=>`<div class="pillar"><div class="pct">${G.mix[i]}%</div><div class="bar"><i style="width:${G.mix[i]}%"></i></div><b>${p[0]}</b><span class="muted">${p[1]}　·　約 ${Math.max(1,Math.round(perMonth*G.mix[i]/100))} 條 / 月</span></div>`).join("")}</div>
-  </section>
-  <section class="blk">
-    <h3><span class="no">SC.03</span>推薦影片格式</h3>
-    <p class="muted" style="font-size:13px">Hook 係範例句式，［ ］入面請填你自己嘅真實資料，唔好作數字。</p>
-    <div class="formats">${fmts.map(f=>`<div class="fmt"><span class="tag">${f.len} · ${P.ratio}</span><div class="name">${f.n}</div><div class="hook">${esc(f.hook)}</div><ol>${f.st.map(s=>`<li>${s}</li>`).join("")}</ol></div>`).join("")}</div>
-    ${d.face!=="yes"?`<p class="warn">唔出鏡方案：${faceNote(d.face)}</p>`:""}
-  </section>
-  <section class="blk">
-    <h3><span class="no">SC.04</span>製作 SOP · 每條片流程</h3>
-    <div class="steps">${steps.map((s,i)=>`<div class="step"><div class="tc"><b>STEP ${i+1}</b>${s[1]?hm(s[1]):"外判處理"}</div><div><strong>${s[0]}</strong><ul>${s[2].map(x=>`<li>${x}</li>`).join("")}</ul></div></div>`).join("")}</div>
-  </section>
-  <section class="blk">
-    <h3><span class="no">SC.05</span>鏡頭清單 Shot List</h3>
-    <div class="tablewrap"><table><thead><tr><th>鏡號</th><th>景別</th><th>內容</th><th>秒數</th></tr></thead><tbody>
-    ${I.shots.map((s,i)=>`<tr><td class="mono">${String(i+1).padStart(2,"0")}A</td><td>${s[0]}</td><td>${s[1]}</td><td class="mono">00:0${s[2]}</td></tr>`).join("")}
-    <tr><td></td><td></td><td class="muted">合計（未計 Hook 字卡）</td><td class="mono">00:${String(shotTotal).padStart(2,"0")}</td></tr>
-    </tbody></table></div>
-  </section>
-  <section class="blk">
-    <h3><span class="no">SC.06</span>每週發佈日程</h3>
-    <div class="week">${DAYS.map((dd,i)=>{const on=F.days.includes(i);const k=F.days.indexOf(i);const p=on?I.pillars[k%4][0]:"";return`<div class="day${on?" on":""}"><span class="d">週${dd}</span>${on?`<span>${p}</span><span class="muted">${P.time.split(" / ")[0]}</span>`:`<span class="muted">${i===0&&d.freq==="w1"?"策劃 + 拍攝":"回覆留言"}</span>`}</div>`}).join("")}</div>
-  </section>
-  <section class="blk">
-    <h3><span class="no">SC.07</span>點樣睇成效</h3>
-    <p class="muted">每星期睇一次以下數字，知道條片有冇幫到生意：</p>
-    <div class="kpi">${[G.kpi,...I.kpi].map(k=>`<span>${k}</span>`).join("")}</div>
-    <p class="muted" style="font-size:13px">首 30 日先求穩定出片，第 2 個月先開始比較數字。</p>
-  </section>
-  <section class="blk">
-    <h3><span class="no">SC.08</span>行業注意事項</h3>
-    <div class="warn"><ul class="list">${I.avoid.map(a=>`<li>${a}</li>`).join("")}</ul></div>
-  </section>
-  ${jvmBlock(d,D)}
-`;
-  $("#copy").onclick=()=>copySOP(d,steps,fmts);
-}
-
-function copySOP(d,steps,fmts){
-  const I=IND[d.ind],G=GOALS[d.goal],P=PLATS[d.plat],T=TEAMS[d.team],F=FREQ[d.freq];
-  const L=[];
-  L.push(`【${d.biz}｜拍片 SOP】`,`行業：${I.n}｜目標：${G.n}｜平台：${P.n}｜頻率：${F.n}`,`目標客人：${d.aud}`,d.usp?`核心賣點：${d.usp}`:"","",`■ 行業重點：${I.pain}`,"","■ 內容支柱");
-  I.pillars.forEach((p,i)=>L.push(`- ${p[0]}（${G.mix[i]}%）：${p[1]}`));
-  L.push("","■ 推薦格式");fmts.forEach(f=>{L.push(`- ${f.n}（${f.len}）Hook：${f.hook}`);f.st.forEach(s=>L.push(`    · ${s}`))});
-  L.push("","■ 製作流程");steps.forEach((s,i)=>{L.push(`${i+1}. ${s[0]}`);s[2].forEach(x=>L.push(`    · ${x}`))});
-  L.push("","■ 鏡頭清單");I.shots.forEach((s,i)=>L.push(`${i+1}. ${s[0]}｜${s[1]}｜${s[2]}秒`));
-  L.push("","■ 點樣睇成效："+[G.kpi,...I.kpi].join("、"),"","■ 注意事項",...I.avoid.map(a=>"- "+a));
-  const D=diagnose(d);
-  L.push("","■ 現況診斷",...D.findings.map(f=>`- ${f.k}：${f.t}`));
-  L.push("","■ 建議下一步："+recText(D.rec),"  原因："+D.why.join("；"));
-  if(D.rec!=="diy"){const o=JVM[D.rec];L.push(`  ${JVM.name}｜${o.n} ${o.price}／${o.unit}`,`  WhatsApp ${JVM.waShow}｜${JVM.email}｜IG ${JVM.ig}`)}
-  const txt=L.filter(x=>x!==null).join("\n");
-  navigator.clipboard.writeText(txt).then(()=>toast("已複製，可以貼去 WhatsApp / Notes")).catch(()=>{
-    const ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");toast("已複製")}catch(e){toast("請手動複製")}ta.remove();});
-}
-function recText(r){return r==="pilot"?`${JVM.name}「${JVM.pilot.n}」`:r==="diag"?`${JVM.name}「${JVM.diag.n}」`:"先跟 SOP 自己做 4 星期"}
-function offerCard(o,primary){return`<div class="offer${primary?" main":""}">
-  ${primary?'<span class="tag">建議你</span>':'<span class="tag">另一選擇</span>'}
+function offer(o){return`<div class="offer">
   <div class="oname">${o.n}</div>
-  <div class="price"><b>${o.price}</b><span>／${o.unit}</span>${o.orig?`<s>${o.orig.startsWith("市場")?o.orig:"原價 "+o.orig}</s>`:""}</div>
-  <ul class="list">${o.items.map(i=>`<li>${i}</li>`).join("")}</ul>
-  ${o.terms?`<p class="muted" style="font-size:13px">${o.terms}</p>`:""}
+  <div class="price"><b>${o.price}</b><span>／${o.unit}</span>${o.orig?`<s>原價 ${o.orig}</s>`:""}</div>
+  <ul>${o.items.map(i=>`<li>${i}</li>`).join("")}</ul>
+  ${o.terms?`<p class="terms">${o.terms}</p>`:""}
 </div>`}
-function jvmBlock(d,D){
-  const I=IND[d.ind];
-  const order=D.rec==="pilot"?["pilot","diag"]:["diag","pilot"];
-  const msg=encodeURIComponent(`你好，我係${d.biz}（${I.n}），用咗拍片 SOP 配對器，想了解「${D.rec==="pilot"?JVM.pilot.n:JVM.diag.n}」。`);
-  const c=JVM.cases[d.ind];
-  const map=[["定位","對應 DX 診斷 + SC.01"],["支柱","對應 SC.02 內容支柱"],["產出","對應 SC.03–SC.05，JVM 每月 2 次上門批量拍 + 剪"],["承接","片尾 CTA 同私訊話術，JVM 提供範本"],["復盤","對應 SC.07 成效數字，JVM 每月出報告"]];
-  return`<section class="blk jvm" id="jvm">
-    <h3><span class="no">JVM</span>${JVM.name} 可以點幫你</h3>
-    <div class="recbox">
-      <div class="k">建議下一步</div>
-      <div class="recname">${recText(D.rec)}</div>
-      <div class="muted">原因：${D.why.join("；")}</div>
-    </div>
-    <div class="offers">${order.map((k,i)=>offerCard(JVM[k],i===0&&D.rec!=="diy")).join("")}</div>
-    <div class="fivep">${JVM.fivep.map((p,i)=>`<div><span class="n">P${i+1}</span><b>${p[0]}</b><span class="muted">${p[1]}</span><small>${map[i][1]}</small></div>`).join("")}</div>
-    ${c?`<p>JVM 做過同類行業：<b>${c}</b>。想睇實際內容同數據，可以聯絡 JVM 索取案例。</p>`:""}
+
+function renderJVM(){
+  const I=IND[cur],biz=$("#biz").value.trim();
+  const msg=encodeURIComponent(`你好，我係${biz?biz+"，":""}做${I.n}，用咗拍片題材配對器，想了解 JVM 拍片服務。`);
+  const c=JVM.cases[cur];
+  $("#jvm").innerHTML=`
+    <span class="step" style="color:inherit;opacity:.75">第 3 步</span>
+    <h2>唔使自己拍，交俾 JVM</h2>
+    <p class="muted" style="margin:0">上面啲題材，JVM 可以上門幫你拍、幫你剪，再教你點樣將睇片嘅人變成查詢。${c?`JVM 做過同類行業：${c}。`:""}</p>
+    <div class="offers">${offer(JVM.diag)}${offer(JVM.pilot)}</div>
     <div class="contact">
       <a class="btn" href="https://wa.me/${JVM.wa}?text=${msg}" target="_blank" rel="noopener">WhatsApp JVM：${JVM.waShow}</a>
       <span class="sel">${JVM.email}</span><span class="sel">IG ${JVM.ig}</span>
     </div>
-    <p class="muted" style="font-size:13px">${JVM.founder}｜價錢及名額以 JVM 最新合約為準。</p>
-  </section>`}
+    <p class="note">${JVM.founder}｜價錢及名額以 JVM 最新合約為準。</p>`;
+}
+
+function copy(){
+  const I=IND[cur],biz=$("#biz").value.trim();
+  const L=[`【${biz||I.n}｜拍片題材】`,"",`重點：${I.pain}`,""];
+  I.formats.forEach((f,i)=>{L.push(`${i+1}. ${f.n}（${f.len}）`,`   開頭：${f.hook}`)});
+  L.push("","之後可以輪住拍：",...I.pillars.map(p=>`- ${p[0]}`),"",`想 JVM 幫你拍：WhatsApp ${JVM.waShow}｜IG ${JVM.ig}`);
+  const txt=L.join("\n");
+  navigator.clipboard.writeText(txt).then(()=>toast("已複製")).catch(()=>{
+    const ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();
+    try{document.execCommand("copy");toast("已複製")}catch(e){toast("請手動複製")}ta.remove()});
+}
 function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>t.hidden=true,2200)}
 
-$("#f").addEventListener("submit",e=>{e.preventDefault();build();if(matchMedia("(max-width:880px)").matches)$("#out").scrollIntoView({behavior:"smooth"})});
-$("#f").addEventListener("change",build);
-build();
+render();
 </script>
 </body>
 </html>
