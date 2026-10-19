@@ -3,3 +3,5 @@
 輸入行業同公司資料，即刻配對出該行業嘅拍片 SOP（內容支柱、影片格式、製作流程、鏡頭清單、發佈日程、器材、KPI、注意事項）。
 
 純 HTML，一個檔案，唔使登入、唔使任何 AI 帳戶。直接開 `index.html` 或用 GitHub Pages 發佈。
+
+網址：https://homing112999.github.io/jvm-sop/
