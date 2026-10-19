@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>拍片 SOP 配對器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;500;700&family=Noto+Serif+HK:wght@700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: call-sheet tool — intake form on the left (sticky), generated production SOP on the right, styled like a film call sheet with slate numbers and timecodes */
+:root{
+  --bg:#f3f5f7; --paper:#ffffff; --ink:#15202b; --muted:#5d6b78; --line:#d9dfe5;
+  --accent:#c8102e; --accent-soft:#fbe7ea; --slate:#1d2b38; --slate-fg:#f3f5f7; --chip:#eaeef2;
+  --good:#1f7a4d;
+  --display:"Noto Serif HK","Songti TC",serif;
+  --body:"Noto Sans HK","PingFang HK","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f151b; --paper:#172029; --ink:#e7ecf0; --muted:#94a3b0; --line:#2a3743;
+  --accent:#ff4d63; --accent-soft:#3a1a20; --slate:#e7ecf0; --slate-fg:#0f151b; --chip:#22303c; --good:#4cc38a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f151b; --paper:#172029; --ink:#e7ecf0; --muted:#94a3b0; --line:#2a3743;
+  --accent:#ff4d63; --accent-soft:#3a1a20; --slate:#e7ecf0; --slate-fg:#0f151b; --chip:#22303c; --good:#4cc38a; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.65}
+.wrap{max-width:1240px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;margin-bottom:24px}
+.brand{display:flex;flex-direction:column;gap:4px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.rec{width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.rec{animation:none}}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(28px,4.4vw,44px);line-height:1.15;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:0;max-width:60ch}
+.grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:880px){.grid{grid-template-columns:minmax(0,1fr)}}
+form.intake{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+@media (max-width:880px){form.intake{position:static}}
+form.intake h2{font-family:var(--display);font-size:20px;margin:0}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.field .lbl{font-size:13px;font-weight:700}
+.field small{color:var(--muted);font-size:12px;font-weight:400}
+input[type=text],select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 10px;width:100%}
+textarea{min-height:64px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{font-weight:500;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;background:var(--bg)}
+.seg input:checked+label{background:var(--slate);color:var(--slate-fg);border-color:var(--slate)}
+.seg input:focus-visible+label{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:inherit;font-weight:700;border:0;border-radius:6px;padding:11px 16px;cursor:pointer;background:var(--accent);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* Output: call sheet */
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0}
+.slate{background:var(--slate);color:var(--slate-fg);padding:18px 22px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 18px}
+@media (max-width:640px){.slate{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.slate .k{font-family:var(--mono);font-size:11px;letter-spacing:.1em;opacity:.7;text-transform:uppercase}
+.slate .v{font-weight:700;font-size:15px;line-height:1.35;overflow-wrap:anywhere}
+.slate .title{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;border-bottom:1px dashed currentColor;padding-bottom:12px;margin-bottom:2px}
+.slate .title b{font-family:var(--display);font-size:clamp(20px,3vw,28px);font-weight:900}
+.slate .title span{font-family:var(--mono);font-size:12px;opacity:.8}
+.actions{display:flex;flex-wrap:wrap;gap:8px;padding:14px 22px;border-bottom:1px solid var(--line)}
+section.blk{padding:22px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+section.blk:last-child{border-bottom:0}
+.blk h3{margin:0;font-family:var(--display);font-size:20px;display:flex;align-items:baseline;gap:10px}
+.blk h3 .no{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:700}
+.blk p{margin:0;max-width:68ch}
+.muted{color:var(--muted)}
+.pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.pillar{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.pillar .pct{font-family:var(--mono);font-weight:700;font-size:22px;color:var(--accent);font-variant-numeric:tabular-nums}
+.pillar .bar{height:4px;background:var(--chip);border-radius:2px;overflow:hidden}
+.pillar .bar i{display:block;height:100%;background:var(--accent)}
+.formats{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.fmt{background:var(--bg);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.fmt .name{font-weight:700;font-size:16px}
+.tag{font-family:var(--mono);font-size:11px;background:var(--chip);border-radius:4px;padding:2px 6px;align-self:flex-start}
+.hook{border-left:3px solid var(--accent);padding-left:10px;font-weight:500}
+.fmt ol{margin:0;padding-left:18px;font-size:14px}
+.steps{display:flex;flex-direction:column;gap:0}
+.step{display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;padding:12px 0;border-top:1px dashed var(--line)}
+.step:first-child{border-top:0}
+.step .tc{font-family:var(--mono);font-size:12px;color:var(--muted);padding-top:3px}
+.step .tc b{display:block;color:var(--accent);font-size:13px}
+.step ul{margin:4px 0 0;padding-left:18px;font-size:14px}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;font-weight:700}
+td.mono{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+@media (max-width:640px){.week{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.day{border:1px solid var(--line);border-radius:6px;padding:8px;min-height:78px;font-size:12px;display:flex;flex-direction:column;gap:4px}
+.day .d{font-family:var(--mono);font-weight:700;font-size:11px;color:var(--muted)}
+.day.on{border-color:var(--accent);background:var(--accent-soft)}
+.day.on .d{color:var(--accent)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.list{margin:0;padding-left:18px}
+.warn{background:var(--accent-soft);border-radius:8px;padding:12px 14px;font-size:14px}
+.kpi{display:flex;flex-wrap:wrap;gap:8px}
+.kpi span{background:var(--chip);border-radius:999px;padding:4px 10px;font-size:13px}
+.ai-out{background:var(--bg);border-radius:8px;padding:14px;white-space:pre-wrap;font-size:14px;min-height:48px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--slate);color:var(--slate-fg);padding:10px 16px;border-radius:6px;font-size:14px}
+footer{margin-top:20px;color:var(--muted);font-size:12px;font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="eyebrow"><span class="rec" aria-hidden="true"></span>Video SOP Matcher · 商會版</div>
+      <h1>拍片 SOP 配對器</h1>
+      <p class="sub">輸入你嘅行業同資源，即刻配對出一份屬於你行業嘅拍片標準作業流程：拍乜、點拍、幾時出、點睇成效。</p>
+    </div>
+  </header>
+
+  <div class="grid">
+    <form class="intake" id="f" autocomplete="off">
+      <h2>公司資料</h2>
+      <div class="field">
+        <label for="biz">公司 / 品牌名稱</label>
+        <input type="text" id="biz" value="陳記茶餐廳">
+      </div>
+      <div class="field">
+        <label for="ind">行業</label>
+        <select id="ind"></select>
+      </div>
+      <div class="field">
+        <label for="aud">目標客人 <small>（年齡、身份、地區）</small></label>
+        <input type="text" id="aud" value="觀塘上班族、25–45歲">
+      </div>
+      <div class="field">
+        <label for="usp">你最大嘅賣點 <small>（一句講晒）</small></label>
+        <textarea id="usp">四十年老字號，自家製菠蘿油同港式奶茶</textarea>
+      </div>
+      <div class="field">
+        <span class="lbl">拍片主要目標</span>
+        <div class="seg" id="goal"></div>
+      </div>
+      <div class="field">
+        <label for="plat">主力平台</label>
+        <select id="plat"></select>
+      </div>
+      <div class="field">
+        <span class="lbl">製作資源</span>
+        <div class="seg" id="team"></div>
+      </div>
+      <div class="field">
+        <span class="lbl">出片頻率</span>
+        <div class="seg" id="freq"></div>
+      </div>
+      <div class="field">
+        <span class="lbl">老闆 / 員工肯唔肯出鏡？</span>
+        <div class="seg" id="face"></div>
+      </div>
+      <button class="btn" type="submit">生成 SOP</button>
+    </form>
+
+    <div class="sheet" id="out" aria-live="polite"></div>
+  </div>
+  <footer>建議內容按一般行業經驗整理，發佈前請按自身情況及行業守則調整。</footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const IND = {
+  food:{n:"餐飲 / 食肆",pain:"客人未試過唔會入嚟，要令佢未食已經想食。",
+    pillars:[["招牌菜製作過程","睇住整先最吸引"],["食評 / 客人反應","第三方講好過自己講"],["老闆 / 師傅故事","有人情味先記得"],["優惠 / 新品","俾一個今日就嚟嘅理由"]],
+    formats:[{n:"製作過程 ASMR",len:"15–25秒",hook:"「呢個菠蘿油，我哋每朝 5 點開始整。」",st:["0–2秒：成品特寫 + 牛油溶落去","3–15秒：搓麵、焗爐、出爐三個快鏡","16–20秒：咬落去嘅聲同表情","結尾：地址字幕 + 營業時間"]},
+      {n:"街訪試食",len:"30–45秒",hook:"「俾 10 個路人試，有幾多個話好食？」",st:["開場問題字幕","3–5個真實反應快剪","評分數字疊字","結尾：店名 + 優惠碼"]},
+      {n:"老闆一分鐘",len:"45–60秒",hook:"「做咗 40 年，我最怕客人問呢一句⋯」",st:["老闆對鏡講一個真實小故事","穿插舖頭舊相 / 日常畫面","收尾帶出招牌菜","CTA：留言講你最鍾意食咩"]}],
+    shots:[["大特寫","招牌菜成品、蒸氣、醬汁流動",3],["特寫","師傅手部操作",4],["中景","師傅全身工作",3],["空鏡","舖面招牌、排隊人龍",2],["中近景","客人食第一啖反應",3],["俯拍","成枱餸 flat lay",2]],
+    kpi:["收藏數","分享數","「點去」留言","到店提及影片人數"],
+    avoid:["食物要即整即拍，熱辣辣先有蒸氣","避免拍到其他客人樣貌，要先問准"],
+    cta:"今日嚟講「睇片嚟」送凍檸茶"},
+  beauty:{n:"美容 / 美髮",pain:"效果睇得見先信，客人最驚「做完唔似相」。",
+    pillars:[["Before / After","直接證明效果"],["過程 & 技術","建立專業感"],["護理小知識","教育型內容易收藏"],["客人見證","減低第一次嘅擔心"]],
+    formats:[{n:"同一動作 Before↔After",len:"10–20秒",hook:"「撥一撥頭髮，就由呢個變呢個。」",st:["Before：客人撥頭髮 / 轉頭","跟住音樂 beat 切去 After 同一動作","慢鏡 360° 展示","字幕：髮型名稱 + 所需時間"]},
+      {n:"髮型師講解",len:"30–45秒",hook:"「十個人有九個電錯髮，因為唔知呢樣嘢。」",st:["一個常見錯誤","示範正確做法","對比效果","CTA：留言「預約」"]},
+      {n:"客人真心話",len:"20–30秒",hook:"「第一次嚟，我其實好驚。」",st:["客人講做之前嘅擔心","做緊嘅過程快剪","完成後嘅反應","店名 + 預約方法"]}],
+    shots:[["中近景","Before 正面 + 側面",3],["特寫","工具、剪刀、染膏調色",2],["大特寫","髮質 / 皮膚紋理",2],["中景","師傅同客人互動",3],["慢鏡","After 撥頭髮 / 轉身",4],["特寫","客人照鏡反應",2]],
+    kpi:["收藏數","私訊查詢數","預約轉化","Before/After 完播率"],
+    avoid:["Before 同 After 要同一燈光、同一角度，否則冇說服力","醫學美容效果唔可以誇大，要符合商品說明條例"],
+    cta:"私訊「預約」送首次護理"},
+  retail:{n:"零售 / 電商",pain:"網上睇唔到實物，要用影片代替摸到、試到。",
+    pillars:[["開箱 / 實物展示","解決「實物係點」"],["用法教學","令人想像自己用緊"],["比較 / 推介","幫客人做決定"],["限時優惠","製造即時購買理由"]],
+    formats:[{n:"3秒開箱",len:"15–20秒",hook:"「呢個係我今年最後悔冇早啲買嘅嘢。」",st:["產品最吸引一刻先出","開箱過程快剪","三個賣點各 2 秒","價錢 + 購買連結"]},
+      {n:"一物多用",len:"20–30秒",hook:"「一個袋，可以有 5 種用法。」",st:["數字倒數結構","每種用法一個場景","最後一種最驚喜","CTA：連結喺 bio"]},
+      {n:"店員推介",len:"30–45秒",hook:"「如果你預算 $500，我會揀呢三樣。」",st:["設定預算 / 情境","三件產品逐件講","各自適合邊類人","邀請到店 / 網購"]}],
+    shots:[["大特寫","產品質感、細節、Logo",2],["手部","開箱、拎起、使用",3],["中景","模特兒 / 店員使用",3],["空鏡","店舖陳列",2],["對比","產品大小 vs 日常物件",2],["定格","價錢牌 / 優惠",2]],
+    kpi:["連結點擊率","加入購物車","優惠碼使用次數","每條片帶來營業額"],
+    avoid:["價錢同優惠期要寫清楚，避免誤導","唔好用未授權嘅流行音樂做廣告片"],
+    cta:"輸入優惠碼 VIDEO10 即減一成"},
+  property:{n:"地產代理",pain:"盤源人人都有，客人揀嘅係「信唔信你」。",
+    pillars:[["睇樓 Room Tour","主力引客"],["區內生活資訊","建立地區專家形象"],["市場 / 按揭知識","專業度"],["成交故事","社會證明"]],
+    formats:[{n:"60秒睇樓團",len:"45–60秒",hook:"「$500萬喺觀塘，買到啲咩？」",st:["開場：價錢 + 地區大字","由門口一鏡行入去","重點：景觀、間隔、採光","結尾：盤號 + 聯絡"]},
+      {n:"地區一分鐘",len:"30–45秒",hook:"「住將軍澳 5 年，我會話你知 3 個真相。」",st:["地區空鏡開場","三個生活資訊（交通、食肆、學校）","代理對鏡總結","CTA：留言想睇邊區"]},
+      {n:"按揭 Q&A",len:"30–45秒",hook:"「首期唔夠一成？你可能未聽過呢個方法。」",st:["一個常見問題","簡單計數字卡","提醒風險","邀請私訊計算"]}],
+    shots:[["穩定器一鏡","入門到客廳",8],["廣角","每個房間",3],["窗外","景觀",3],["特寫","廚廁設備",2],["空鏡","屋苑會所、附近街道",3],["中景","代理對鏡講解",5]],
+    kpi:["私訊查詢","睇樓預約","粉絲中本區比例","完播率"],
+    avoid:["必須遵守地產代理監管局廣告指引，列明牌照號碼","業主單位要先取得同意先拍攝"],
+    cta:"私訊「睇樓」安排即日睇"},
+  finance:{n:"金融 / 保險",pain:"產品抽象又受規管，要先建立信任先談產品。",
+    pillars:[["理財小知識","教育型，易收藏分享"],["生活情境故事","令抽象變具體"],["顧問日常","人性化"],["常見誤解拆解","專業權威"]],
+    formats:[{n:"30秒理財知識",len:"30秒",hook:"「月入 $3 萬，點解你仲係儲唔到錢？」",st:["一個痛點問題","三個簡單原則字卡","一個生活例子","CTA：收藏 / 留言問問題"]},
+      {n:"情境短劇",len:"45–60秒",hook:"「如果聽日入醫院，你知唔知自己有咩保障？」",st:["真實情境演繹","轉折：發現問題","顧問點出思考方向（唔推銷產品）","邀請預約免費檢視"]},
+      {n:"誤解拆解",len:"30–45秒",hook:"「『年輕唔使買保險』— 其實啱一半。」",st:["引述常見講法","講清楚啱同唔啱","一個數字佐證","總結 + 免責聲明"]}],
+    shots:[["中近景","顧問對鏡（辦公室背景）",5],["字卡","數字 / 圖表",3],["情境","演員生活場景",4],["特寫","計算機、文件（無個人資料）",2],["空鏡","中環 / 辦公室",2],["中景","顧問同客人傾談（背面）",3]],
+    kpi:["收藏數","私訊諮詢","預約檢視次數","追蹤者增長"],
+    avoid:["內容須符合保監局 / 證監會規定，避免承諾回報","唔好拍到任何客戶文件或個人資料"],
+    cta:"私訊「檢視」預約免費保障分析"},
+  edu:{n:"教育 / 培訓",pain:"家長同學員要先見到「教得好」先肯報名。",
+    pillars:[["一分鐘小教學","展示教學能力"],["學生成果","最強說服力"],["課堂花絮","氣氛同環境"],["導師介紹","信任"]],
+    formats:[{n:"一分鐘學識",len:"30–60秒",hook:"「呢個英文錯誤，90% 香港人都會犯。」",st:["錯誤示範","正確答案","記憶小貼士","CTA：留言試答一題"]},
+      {n:"學生 Before / After",len:"30–45秒",hook:"「三個月前佢一個字都唔敢講。」",st:["之前片段 / 成績","學習過程快剪","而家嘅表現","課程資料 + 報名"]},
+      {n:"課堂 Vlog",len:"30–45秒",hook:"「跟我上一堂 Robot 班。」",st:["學生入課室","上堂精華","作品展示","下期開班日期"]}],
+    shots:[["中近景","導師講解",5],["特寫","學生寫字 / 作品",2],["中景","課堂互動",3],["白板","重點內容",3],["反應","學生明白一刻",2],["空鏡","教室環境",2]],
+    kpi:["收藏數","試堂登記","家長私訊","分享數"],
+    avoid:["拍攝學生（特別係未成年）必須有家長書面同意","成績宣傳要真實可證"],
+    cta:"留言「試堂」免費體驗一堂"},
+  health:{n:"醫療 / 診所 / 健康",pain:"受廣告規例限制，要用知識同信任取代硬銷。",
+    pillars:[["健康知識","最安全又有價值"],["常見問題解答","解決客人疑慮"],["診所環境 / 流程","減低陌生感"],["團隊介紹","專業與人情"]],
+    formats:[{n:"醫生 30 秒",len:"30–45秒",hook:"「腰痛唔一定係腰嘅問題。」",st:["一個常見症狀","可能原因（簡單講）","日常可以點做","提醒：有需要請求診"]},
+      {n:"睇診流程",len:"30–45秒",hook:"「第一次嚟物理治療，會做啲咩？」",st:["登記處","評估過程","治療環境","預約方法"]},
+      {n:"迷思拆解",len:"30秒",hook:"「熱敷定冰敷？好多人都搞錯。」",st:["列出迷思","正確做法","原因","總結"]}],
+    shots:[["中近景","醫生 / 治療師對鏡",5],["示範","動作示範（全身）",4],["特寫","器材",2],["空鏡","診所環境",2],["字卡","重點文字",3],["中景","團隊合照",2]],
+    kpi:["收藏數","分享數","預約查詢","追蹤者增長"],
+    avoid:["註冊醫生須遵守醫委會專業守則，唔可以用病人見證或比較療效","病人樣貌及病歷絕對唔可以出現"],
+    cta:"預約電話 / WhatsApp 喺 bio"},
+  fitness:{n:"健身 / 運動",pain:"人人都想變好，但要令佢覺得「我都做得到」。",
+    pillars:[["動作教學","實用、易收藏"],["學員轉變","社會證明"],["教練日常","個人品牌"],["挑戰 / 互動","增加分享"]],
+    formats:[{n:"一個動作教學",len:"15–30秒",hook:"「深蹲膝頭痛？你可能做錯咗呢一步。」",st:["錯誤示範（紅色 X）","正確示範（綠色 ✓）","慢鏡重點","CTA：收藏去 gym 用"]},
+      {n:"學員 12 週",len:"30–45秒",hook:"「12 個星期，佢冇節食。」",st:["Before 相","訓練片段快剪","After 同一角度","課程資料"]},
+      {n:"7 日挑戰",len:"20–30秒",hook:"「每日 5 分鐘，7 日後你會發現⋯」",st:["挑戰規則","示範動作","邀請 tag 朋友","每日更新"]}],
+    shots:[["全身","完整動作（側面）",4],["特寫","關節 / 發力位置",2],["慢鏡","動作重點",3],["中近景","教練講解",4],["空鏡","場館環境",2],["反應","學員完成一刻",2]],
+    kpi:["收藏數","分享數","試堂登記","私訊查詢"],
+    avoid:["轉變效果要真實，唔好修圖","動作安全提示要講清楚"],
+    cta:"私訊「試堂」免費體驗"},
+  pro:{n:"專業服務（律師 / 會計 / 顧問）",pain:"服務睇唔到，要將專業知識變成客人聽得明嘅內容。",
+    pillars:[["法規 / 稅務知識","權威"],["案例分享（匿名）","具體化"],["創業者常見錯誤","切中痛點"],["團隊 / 文化","信任"]],
+    formats:[{n:"一分鐘懂法規",len:"45–60秒",hook:"「開公司頭一年，最多人漏咗呢樣嘢。」",st:["一個痛點","三個重點字卡","實際例子","CTA：留言問問題"]},
+      {n:"案例拆解",len:"60秒",hook:"「一個客人因為一份合約，損失咗 $50 萬。」",st:["匿名案例背景","問題出喺邊","點樣避免","預約諮詢"]},
+      {n:"截數提醒",len:"20–30秒",hook:"「仲有 30 日，你報咗稅未？」",st:["日期大字","要準備咩","我哋可以點幫","聯絡方式"]}],
+    shots:[["中近景","專業人士對鏡（書櫃 / 會議室）",5],["字卡","重點 / 日期",3],["特寫","文件（模糊處理）",2],["空鏡","辦公室",2],["中景","團隊開會",3],["B-roll","城市 / 商業區",2]],
+    kpi:["LinkedIn 互動","網站流量","諮詢預約","電郵訂閱"],
+    avoid:["唔可以構成個別法律 / 稅務意見，要加免責聲明","案例必須完全匿名"],
+    cta:"預約 15 分鐘免費諮詢"},
+  mfg:{n:"製造 / 工業 / 貿易",pain:"B2B 客人睇重實力同品質，影片要證明「做得到、做得穩」。",
+    pillars:[["生產過程","實力展示"],["品質控制","信心"],["案例 / 客戶項目","社會證明"],["團隊與工匠","品牌故事"]],
+    formats:[{n:"工廠一鏡到底",len:"45–60秒",hook:"「一件產品由原材料到出貨，要經過 12 個工序。」",st:["原材料","重點工序快剪","QC 檢查","包裝出貨"]},
+      {n:"工匠特寫",len:"30–45秒",hook:"「佢做咗呢份工 25 年，誤差唔超過 0.1mm。」",st:["人物介紹","手部工作特寫","成品展示","品牌價值"]},
+      {n:"客戶項目",len:"45–60秒",hook:"「我哋點樣幫客人 3 星期內交 1 萬件貨。」",st:["客戶需求","挑戰","解決方法","成果數字"]}],
+    shots:[["廣角","廠房全景",3],["大特寫","機器 / 工序",2],["手部","工人操作",3],["慢鏡","火花 / 物料流動",3],["中近景","負責人訪問",5],["定格","成品 / 證書",2]],
+    kpi:["LinkedIn 互動","網站查詢","展會提及","詢價數"],
+    avoid:["客戶產品 / 設計要先取得同意先拍","工業安全：拍攝時人員要戴好安全裝備"],
+    cta:"網站或 WhatsApp 索取報價"},
+  travel:{n:"旅遊 / 酒店",pain:"賣嘅係體驗，要令人睇完即刻想去。",
+    pillars:[["體驗 POV","代入感"],["隱藏玩法 / 攻略","收藏價值"],["幕後服務","品質"],["客人回憶","情感"]],
+    formats:[{n:"第一身入住",len:"20–30秒",hook:"「$1,200 一晚，呢間房有咩？」",st:["入門 POV","房間亮點快剪","景觀 / 設施","價錢 + 預訂"]},
+      {n:"三個隱藏玩法",len:"30–45秒",hook:"「住客都未必知嘅 3 個地方。」",st:["數字倒數","每個地方一個場景","最後一個最驚喜","CTA：收藏"]},
+      {n:"幕後一日",len:"30–45秒",hook:"「早餐 6 點開始，廚房 4 點已經開工。」",st:["員工工作","細節服務","客人反應","品牌理念"]}],
+    shots:[["POV","第一身行入",5],["廣角","景觀 / 泳池",3],["特寫","細節（床品、早餐）",2],["縮時","日落 / 城市",3],["中景","客人享受",3],["空鏡","大堂",2]],
+    kpi:["收藏數","預訂連結點擊","分享數","直接預訂比例"],
+    avoid:["相片影片要反映真實房型，避免誤導","拍攝其他住客要先徵求同意"],
+    cta:"官網直接預訂送早餐"},
+  tech:{n:"科技 / IT / SaaS",pain:"產品功能複雜，要將「點用」變成「解決咩問題」。",
+    pillars:[["痛點 → 解決","最易明"],["功能示範","產品力"],["客戶案例","信任"],["行業趨勢","思想領袖"]],
+    formats:[{n:"痛點 15 秒",len:"15–30秒",hook:"「每個月對數對到凌晨？其實可以 3 分鐘搞掂。」",st:["痛點情境","畫面錄影示範","結果對比","免費試用"]},
+      {n:"螢幕錄影教學",len:"45–60秒",hook:"「3 步設定好自動報表。」",st:["Step 1","Step 2","Step 3","CTA：連結試用"]},
+      {n:"創辦人觀點",len:"45–60秒",hook:"「香港中小企未來 2 年最大嘅改變係⋯」",st:["一個觀點","數據 / 例子","對觀眾嘅建議","追蹤 / 聯絡"]}],
+    shots:[["螢幕錄影","產品操作",6],["中近景","講者對鏡",5],["特寫","手機 / 電腦使用",2],["情境","用家工作場景",3],["字卡","數據",3],["空鏡","辦公室",2]],
+    kpi:["試用登記","Demo 預約","網站流量","LinkedIn 互動"],
+    avoid:["螢幕錄影要遮走真實客戶資料","避免太多術語，一條片講一個功能"],
+    cta:"14 日免費試用"},
+  reno:{n:"裝修 / 室內設計 / 建築",pain:"客人最驚超支同貨不對辦，要展示過程同成果。",
+    pillars:[["完工 Before / After","最強吸客"],["施工過程","透明度"],["設計小貼士","收藏價值"],["預算拆解","解決最大疑慮"]],
+    formats:[{n:"400呎變身",len:"20–30秒",hook:"「400 呎舊樓，裝修後完全認唔出。」",st:["Before 同一位置","施工快剪","After 同一位置","呎數 + 預算"]},
+      {n:"預算拆解",len:"45–60秒",hook:"「$30 萬裝修，錢都使咗喺邊？」",st:["總預算","分項字卡","慳錢位","預約度尺"]},
+      {n:"設計錯誤",len:"30秒",hook:"「小單位最唔應該做嘅 3 樣嘢。」",st:["錯誤一","錯誤二","錯誤三","正確建議"]}],
+    shots:[["固定機位","Before 同 After 同一角度",3],["縮時","施工過程",4],["特寫","材料、手工細節",2],["穩定器","完工一鏡行",6],["中近景","設計師講解",4],["空鏡","大廈外觀",2]],
+    kpi:["收藏數","度尺預約","私訊查詢","網站作品集瀏覽"],
+    avoid:["Before / After 必須同一機位、同一時間光線","業主單位資料（地址、門牌）要遮走"],
+    cta:"私訊預約免費度尺"},
+};
+const GOALS={awareness:{n:"品牌曝光",mix:[35,20,30,15],kpi:"觸及人數 & 追蹤增長",cta:"追蹤我哋，下星期仲有"},
+  leads:{n:"引客查詢",mix:[30,25,15,30],kpi:"私訊 / 查詢數",cta:null},
+  sales:{n:"直接銷售",mix:[30,20,10,40],kpi:"轉化 & 營業額",cta:null},
+  hiring:{n:"招聘人才",mix:[15,20,50,15],kpi:"應徵人數",cta:"想加入我哋？私訊「應徵」"}};
+const PLATS={ig:{n:"Instagram Reels",ratio:"9:16",len:"15–45秒",time:"12:00–13:00 / 20:00–22:00",tip:"頭 3 秒定生死，封面要有大字標題；加 3–5 個本地 hashtag。"},
+  xhs:{n:"小紅書",ratio:"3:4 或 9:16",len:"30–90秒",time:"19:00–23:00",tip:"封面標題最重要，用「攻略 / 實測 / 推介」字眼；內文寫足關鍵字方便搜尋。"},
+  fb:{n:"Facebook",ratio:"4:5 或 9:16",len:"30–60秒",time:"12:00–14:00 / 21:00",tip:"一定要燒字幕，大部分人靜音睇；適合 35 歲以上客群。"},
+  yt:{n:"YouTube Shorts",ratio:"9:16",len:"30–60秒",time:"18:00–21:00",tip:"標題寫清楚關鍵字，Shorts 可以帶人去睇長片。"},
+  tiktok:{n:"TikTok / 抖音",ratio:"9:16",len:"15–35秒",time:"19:00–22:00",tip:"用熱門聲音，節奏要快，1–2 秒一個鏡頭。"},
+  li:{n:"LinkedIn",ratio:"1:1 或 4:5",len:"30–90秒",time:"平日 08:00–10:00",tip:"B2B 首選，以老闆 / 專業人士個人帳號發佈效果更好。"}};
+const TEAMS={solo:{n:"一個人 + 手機",gear:["手機（4K 30fps，鏡頭抹乾淨）","手機三腳架 + 藍牙遙控","領夾咪（約 $200–500）","一盞 LED 補光燈","剪輯：CapCut / InShot"],hrs:[1,1,1.5,.25,.25]},
+  small:{n:"2–3 人小團隊",gear:["手機或無反相機","手機穩定器","無線咪一對二","兩盞 LED 燈 + 柔光","剪輯：CapCut / Premiere","共用 Google Drive 素材庫"],hrs:[1.5,2,2,.5,.5]},
+  agency:{n:"外判製作公司",gear:["由製作公司提供","你準備：拍攝場地、產品、出鏡人員","Brief 文件（目標、訊息、參考片）","審片時間表（兩輪修改為限）"],hrs:[2,3,0,.5,.5]}};
+const FREQ={w1:{n:"每週 1 條",days:[3]},w3:{n:"每週 2–3 條",days:[1,3,5]},daily:{n:"每日 1 條",days:[0,1,2,3,4,5,6]}};
+const FACE={yes:{n:"願意出鏡"},voice:{n:"只出聲"},no:{n:"完全唔出鏡"}};
+const DAYS=["一","二","三","四","五","六","日"];
+
+const $=s=>document.querySelector(s);
+function fillSelect(el,obj,val){el.innerHTML=Object.entries(obj).map(([k,v])=>`<option value="${k}"${k===val?" selected":""}>${v.n}</option>`).join("")}
+function fillSeg(el,name,obj,val){el.innerHTML=Object.entries(obj).map(([k,v])=>`<input type="radio" name="${name}" id="${name}-${k}" value="${k}"${k===val?" checked":""}><label for="${name}-${k}">${v.n}</label>`).join("")}
+fillSelect($("#ind"),IND,"food");fillSelect($("#plat"),PLATS,"ig");
+fillSeg($("#goal"),"goal",GOALS,"leads");fillSeg($("#team"),"team",TEAMS,"solo");
+fillSeg($("#freq"),"freq",FREQ,"w3");fillSeg($("#face"),"face",FACE,"yes");
+
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const val=n=>(document.querySelector(`input[name=${n}]:checked`)||{}).value;
+function read(){return{biz:$("#biz").value.trim()||"你的品牌",ind:$("#ind").value,aud:$("#aud").value.trim()||"目標客人",usp:$("#usp").value.trim(),goal:val("goal"),plat:$("#plat").value,team:val("team"),freq:val("freq"),face:val("face")}}
+const hm=h=>h<1?`${Math.round(h*60)}分鐘`:`${h}小時`;
+
+function faceNote(face){
+  if(face==="no")return"全部改用「手部特寫 + 字幕 + 背景音樂」或「產品 / 環境畫面 + AI 配音」，唔使任何人露面。";
+  if(face==="voice")return"用旁白代替對鏡講嘢：畫面拍手部、產品、環境，後期配你把聲。";
+  return"有真人出鏡嘅片通常互動高 2–3 倍，盡量由同一位人物固定出鏡，建立熟悉感。";
+}
+
+let last=null;
+function build(){
+  const d=read();last=d;
+  const I=IND[d.ind],G=GOALS[d.goal],P=PLATS[d.plat],T=TEAMS[d.team],F=FREQ[d.freq];
+  const cta=G.cta||I.cta;
+  const perMonth={w1:4,w3:10,daily:30}[d.freq];
+  const shotTotal=I.shots.reduce((a,s)=>a+s[2],0);
+  const today=new Date();const code=`SOP-${d.ind.toUpperCase()}-${String(today.getMonth()+1).padStart(2,"0")}${String(today.getDate()).padStart(2,"0")}`;
+  const steps=[
+    ["前期策劃",T.hrs[0],["由下面「內容支柱」揀今週主題，按比例分配",`寫 Hook：頭 3 秒一句，參考格式範例`,`列鏡頭清單（約 ${I.shots.length} 個鏡頭），準備道具 / 場地`,d.team==="agency"?"出 Brief 俾製作公司，確認拍攝日":"一次過計劃 3–4 條片，集中一日拍晒"]],
+    ["拍攝",T.hrs[1],[`直度拍攝 ${P.ratio}，每個鏡頭拍 3 個 take`,"面向窗口或開補光燈，避免背光","先拍「Hook 鏡頭」，最重要嘅一定要拍得好",faceNote(d.face)]],
+    ["後期剪輯",T.hrs[2],[`剪到 ${P.len}，1–2 秒換一個鏡頭`,"燒中文字幕（大字、置中偏下）","加品牌 Logo / 片尾 CTA："+cta,"揀封面：大字標題 + 最吸引畫面"]],
+    ["發佈",T.hrs[3],[`發佈時段：${P.time}`,"Caption 第一句重複 Hook，結尾問一條問題","發佈後 1 小時內回覆所有留言",P.tip]],
+    ["數據檢討",T.hrs[4],[`每週睇一次：${G.kpi}`,"睇完播率：頭 3 秒流失多 → 改 Hook","表現最好嘅一條 → 下週用同一格式再拍","每月總結一次，調整內容支柱比例"]]
+  ];
+  const fmts=I.formats.map(f=>({...f,hook:f.hook.replace("陳記",d.biz)}));
+  $("#out").innerHTML=`
+  <div class="slate">
+    <div class="title"><b>${esc(d.biz)}</b><span>${code}</span></div>
+    <div><div class="k">行業</div><div class="v">${I.n}</div></div>
+    <div><div class="k">目標</div><div class="v">${G.n}</div></div>
+    <div><div class="k">平台</div><div class="v">${P.n}</div></div>
+    <div><div class="k">產量</div><div class="v">${F.n}（每月約 ${perMonth} 條）</div></div>
+  </div>
+  <div class="actions">
+    <button class="btn ghost" type="button" id="copy">複製成份 SOP</button>
+  </div>
+  <section class="blk">
+    <h3><span class="no">SC.01</span>行業重點</h3>
+    <p><strong>${I.pain}</strong></p>
+    <p class="muted">目標客人：${esc(d.aud)}${d.usp?`　·　核心賣點：${esc(d.usp)}`:""}</p>
+  </section>
+  <section class="blk">
+    <h3><span class="no">SC.02</span>內容支柱 · 每月比例</h3>
+    <div class="pillars">${I.pillars.map((p,i)=>`<div class="pillar"><div class="pct">${G.mix[i]}%</div><div class="bar"><i style="width:${G.mix[i]}%"></i></div><b>${p[0]}</b><span class="muted">${p[1]}　·　約 ${Math.max(1,Math.round(perMonth*G.mix[i]/100))} 條 / 月</span></div>`).join("")}</div>
+  </section>
+  <section class="blk">
+    <h3><span class="no">SC.03</span>推薦影片格式</h3>
+    <div class="formats">${fmts.map(f=>`<div class="fmt"><span class="tag">${f.len} · ${P.ratio}</span><div class="name">${f.n}</div><div class="hook">${esc(f.hook)}</div><ol>${f.st.map(s=>`<li>${s}</li>`).join("")}</ol></div>`).join("")}</div>
+    ${d.face!=="yes"?`<p class="warn">唔出鏡方案：${faceNote(d.face)}</p>`:""}
+  </section>
+  <section class="blk">
+    <h3><span class="no">SC.04</span>製作 SOP · 每條片流程</h3>
+    <div class="steps">${steps.map((s,i)=>`<div class="step"><div class="tc"><b>STEP ${i+1}</b>${s[1]?hm(s[1]):"外判處理"}</div><div><strong>${s[0]}</strong><ul>${s[2].map(x=>`<li>${x}</li>`).join("")}</ul></div></div>`).join("")}</div>
+  </section>
+  <section class="blk">
+    <h3><span class="no">SC.05</span>鏡頭清單 Shot List</h3>
+    <div class="tablewrap"><table><thead><tr><th>鏡號</th><th>景別</th><th>內容</th><th>秒數</th></tr></thead><tbody>
+    ${I.shots.map((s,i)=>`<tr><td class="mono">${String(i+1).padStart(2,"0")}A</td><td>${s[0]}</td><td>${s[1]}</td><td class="mono">00:0${s[2]}</td></tr>`).join("")}
+    <tr><td></td><td></td><td class="muted">合計（未計 Hook 字卡）</td><td class="mono">00:${String(shotTotal).padStart(2,"0")}</td></tr>
+    </tbody></table></div>
+  </section>
+  <section class="blk">
+    <h3><span class="no">SC.06</span>每週發佈日程</h3>
+    <div class="week">${DAYS.map((dd,i)=>{const on=F.days.includes(i);const k=F.days.indexOf(i);const p=on?I.pillars[k%4][0]:"";return`<div class="day${on?" on":""}"><span class="d">週${dd}</span>${on?`<span>${p}</span><span class="muted">${P.time.split(" / ")[0]}</span>`:`<span class="muted">${i===0&&d.freq==="w1"?"策劃 + 拍攝":"回覆留言"}</span>`}</div>`}).join("")}</div>
+  </section>
+  <section class="blk">
+    <div class="two">
+      <div style="display:flex;flex-direction:column;gap:8px"><h3><span class="no">SC.07</span>器材清單</h3><ul class="list">${T.gear.map(g=>`<li>${g}</li>`).join("")}</ul></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><h3><span class="no">SC.08</span>成效指標 KPI</h3><div class="kpi">${[G.kpi,...I.kpi].map(k=>`<span>${k}</span>`).join("")}</div><p class="muted" style="font-size:13px">首 30 日先求穩定出片，第 2 個月先開始比較數據。</p></div>
+    </div>
+  </section>
+  <section class="blk">
+    <h3><span class="no">SC.09</span>行業注意事項</h3>
+    <div class="warn"><ul class="list">${I.avoid.map(a=>`<li>${a}</li>`).join("")}</ul></div>
+  </section>
+`;
+  $("#copy").onclick=()=>copySOP(d,steps,fmts);
+}
+
+function copySOP(d,steps,fmts){
+  const I=IND[d.ind],G=GOALS[d.goal],P=PLATS[d.plat],T=TEAMS[d.team],F=FREQ[d.freq];
+  const L=[];
+  L.push(`【${d.biz}｜拍片 SOP】`,`行業：${I.n}｜目標：${G.n}｜平台：${P.n}｜頻率：${F.n}`,`目標客人：${d.aud}`,d.usp?`核心賣點：${d.usp}`:"","",`■ 行業重點：${I.pain}`,"","■ 內容支柱");
+  I.pillars.forEach((p,i)=>L.push(`- ${p[0]}（${G.mix[i]}%）：${p[1]}`));
+  L.push("","■ 推薦格式");fmts.forEach(f=>{L.push(`- ${f.n}（${f.len}）Hook：${f.hook}`);f.st.forEach(s=>L.push(`    · ${s}`))});
+  L.push("","■ 製作流程");steps.forEach((s,i)=>{L.push(`${i+1}. ${s[0]}`);s[2].forEach(x=>L.push(`    · ${x}`))});
+  L.push("","■ 鏡頭清單");I.shots.forEach((s,i)=>L.push(`${i+1}. ${s[0]}｜${s[1]}｜${s[2]}秒`));
+  L.push("","■ 器材",...T.gear.map(g=>"- "+g),"","■ KPI："+[G.kpi,...I.kpi].join("、"),"","■ 注意事項",...I.avoid.map(a=>"- "+a));
+  const txt=L.filter(x=>x!==null).join("\n");
+  navigator.clipboard.writeText(txt).then(()=>toast("已複製，可以貼去 WhatsApp / Notes")).catch(()=>{
+    const ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");toast("已複製")}catch(e){toast("請手動複製")}ta.remove();});
+}
+function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>t.hidden=true,2200)}
+
+$("#f").addEventListener("submit",e=>{e.preventDefault();build();if(matchMedia("(max-width:880px)").matches)$("#out").scrollIntoView({behavior:"smooth"})});
+$("#ind").addEventListener("change",build);
+build();
+</script>
+</body>
+</html>
