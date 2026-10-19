@@ -349,7 +349,7 @@ const DAYS=["一","二","三","四","五","六","日"];
 const STAGE={none:{n:"未有帳號"},rare:{n:"有帳號但好少更新"},active:{n:"有穩定更新"}};
 const PAIN={time:{n:"冇時間拍"},idea:{n:"唔知拍乜"},convert:{n:"有片但冇查詢"},edit:{n:"唔識拍 / 剪"}};
 const TIME={t1:{n:"2 小時以下",h:1.5},t2:{n:"2–5 小時",h:4},t3:{n:"5 小時以上",h:7}};
-const BUDGET={b1:{n:"$2,000 以下",v:1500},b2:{n:"$2,000–5,000",v:4000},b3:{n:"$5,000–10,000",v:7500},b4:{n:"$10,000 以上",v:12000}};
+const BUDGET={b1:{n:"$2,000 以下",v:1500},b2:{n:"$2,000–6,000",v:4000},b3:{n:"$6,000–10,000",v:8000},b4:{n:"$10,000 以上",v:12000}};
 
 /* JVM 內容行銷 — 資料來自《JVM 商會會員內容行銷先導計劃》簡報及 JVM BP */
 const JVM={
@@ -358,7 +358,7 @@ const JVM={
   wa:"85296347605",waShow:"9634 7605",email:"Justvibingmedia8@gmail.com",ig:"@justvibing_media",
   fivep:[["定位","工作坊釐清你嘅獨特定位同目標客群"],["支柱","定出 3–5 條核心內容主題"],["產出","批量拍攝與剪輯製作短片"],["承接","流量導向查詢並按需求跟進"],["復盤","每月檢視表現，持續優化方向"]],
   diag:{n:"IP 行業拍攝診斷",price:"$600",orig:"$1,200",unit:"首次",items:["診斷你盤生意嘅 IP 定位同內容方向","拍一條 60 秒內宣傳短片，即刻可以用嚟經營社交媒體","分享你行業可以點樣用 AI Agent 幫生意"]},
-  pilot:{n:"商會會員先導方案",price:"$5,000",orig:"市場正價 $8,000 起",unit:"每月",items:["每月 1 次上門拍攝（約 2 小時，批量拍攝）","每月 4 條 30–45 秒短片，發佈喺 IG Reels + Facebook","首月 60 分鐘定位工作坊（首批會員豁免起步費）","剪輯：字幕、配樂、hashtag 建議","私域承接：CTA 話術範本，將流量導向實際查詢","每月 1 份成效報告（觸及、留言、查詢數）"],terms:"最少 3 個月｜首批 15 位會員，先到先得"},
+  pilot:{n:"商會會員先導方案",price:"$6,000",orig:"市場正價 $8,000 起",unit:"每月起",items:["每月 2 次上門拍攝（批量拍攝）","每月 4–5 條 30–45 秒短片，發佈喺 IG Reels + Facebook","首月 60 分鐘定位工作坊（首批會員豁免起步費）","剪輯：字幕、配樂、hashtag 建議","私域承接：CTA 話術範本，將流量導向實際查詢","每月 1 份成效報告（觸及、留言、查詢數）"],terms:"最少 3 個月｜首批 15 位會員，先到先得"},
   cases:{beauty:"髮型師個人 IP",food:"咖啡店商戶 IP",health:"痛症治療室商戶 IP",fitness:"痛症治療室商戶 IP"}
 };
 
@@ -382,14 +382,14 @@ function diagnose(d){
 
   // 推薦路線
   let rec,why=[];
-  const canPilot=budget>=5000;
+  const canPilot=budget>=6000;
   if((gap||d.pain==="time"||d.pain==="edit"||d.team==="agency")&&canPilot){
     rec="pilot";
     if(gap)why.push("你可抽嘅時間少過所需時間");
     if(d.pain==="time")why.push("你最大困難係冇時間");
     if(d.pain==="edit")why.push("你唔想自己拍剪");
     if(d.team==="agency")why.push("你本身打算外判");
-    why.push(`你預算「${BUDGET[d.budget].n}」，夠先導方案每月 $5,000`);
+    why.push(`你預算「${BUDGET[d.budget].n}」，夠先導方案每月 $6,000 起`);
   }else if(d.stage==="none"||d.pain==="idea"||d.pain==="convert"||!canPilot){
     rec="diag";
     if(d.stage==="none")why.push("你未有帳號，最需要先定位");
@@ -531,7 +531,7 @@ function jvmBlock(d,D){
   const order=D.rec==="pilot"?["pilot","diag"]:["diag","pilot"];
   const msg=encodeURIComponent(`你好，我係${d.biz}（${I.n}），用咗拍片 SOP 配對器，想了解「${D.rec==="pilot"?JVM.pilot.n:JVM.diag.n}」。`);
   const c=JVM.cases[d.ind];
-  const map=[["定位","對應 DX 診斷 + SC.01"],["支柱","對應 SC.02 內容支柱"],["產出","對應 SC.03–SC.05，JVM 上門批量拍 + 剪"],["承接","片尾 CTA 同私訊話術，JVM 提供範本"],["復盤","對應 SC.08 KPI，JVM 每月出報告"]];
+  const map=[["定位","對應 DX 診斷 + SC.01"],["支柱","對應 SC.02 內容支柱"],["產出","對應 SC.03–SC.05，JVM 每月 2 次上門批量拍 + 剪"],["承接","片尾 CTA 同私訊話術，JVM 提供範本"],["復盤","對應 SC.08 KPI，JVM 每月出報告"]];
   return`<section class="blk jvm" id="jvm">
     <h3><span class="no">JVM</span>${JVM.name} 可以點幫你</h3>
     <div class="recbox">
