@@ -241,6 +241,13 @@ const JVM={
 
 
 
+/* 睇同行：Instagram hashtag（即時、唔會過時） */
+const TAGS={food:["香港美食","香港茶餐廳"],beauty:["香港髮型師","香港美容"],retail:["香港小店","香港網店"],property:["香港地產","香港睇樓"],
+  finance:["香港理財","香港保險"],edu:["香港補習","香港興趣班"],health:["香港物理治療","香港痛症"],fitness:["香港健身","香港私人教練"],
+  pro:["香港中小企","香港創業"],mfg:["香港製造","madeinhongkong"],travel:["香港酒店","香港staycation"],tech:["香港初創","香港科技"],reno:["香港裝修","香港室內設計"]};
+/* 對標帳號：只放已核實（帳號存在、仲有更新）嘅帳號。格式：{h:"handle",why:"值得參考嘅地方"} */
+const REFS={};
+
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let cur="food";
@@ -266,6 +273,10 @@ function render(){
     <p class="note">［ ］入面請填你自己嘅真實資料。</p>
     <h2 style="font-size:19px">之後可以輪住拍嘅題目</h2>
     <div class="more">${I.pillars.map(p=>`<div><b>${p[0]}</b><span class="muted">${p[1]}</span></div>`).join("")}</div>
+    <h2 style="font-size:19px">睇吓同行點拍</h2>
+    ${(REFS[cur]||[]).length?`<div class="more">${REFS[cur].map(r=>`<div><a href="https://www.instagram.com/${r.h}/" target="_blank" rel="noopener"><b>@${r.h}</b></a><span class="muted">${r.why}</span></div>`).join("")}</div>`:""}
+    <div class="contact">${TAGS[cur].map(t=>`<a class="btn ghost" href="https://www.instagram.com/explore/tags/${encodeURIComponent(t)}/" target="_blank" rel="noopener">#${t}</a>`).join("")}</div>
+    <p class="note">撳落去會開 Instagram，睇同行用呢個 hashtag 出嘅片。用電話開會直接去 Instagram app。</p>
     <div class="warn"><b>要小心</b><ul>${I.avoid.map(a=>`<li>${a}</li>`).join("")}</ul></div>
     <div><button class="btn ghost" type="button" id="copy">複製題材，WhatsApp 俾自己</button></div>`;
   $("#copy").onclick=copy;
