@@ -59,6 +59,14 @@ select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(-
 .adv .from{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.06em}
 .tips{margin:0;padding-left:20px;font-size:15px}
 .idea .src{font-size:12px;color:var(--muted)}
+.tablewrap{overflow-x:auto}
+table.acct{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}
+.acct th,.acct td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.acct th{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.acct td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.acct tr.hit{background:var(--accent-soft)}
+.acct a{color:var(--ink);font-weight:700}
+.pill{font-family:var(--mono);font-size:10px;background:var(--accent);color:#fff;border-radius:4px;padding:1px 5px}
 select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:16px;min-width:0}
 .why{background:var(--slate);color:var(--slate-fg);border-radius:10px;padding:16px 18px;font-weight:700;font-size:17px}
@@ -290,6 +298,44 @@ const CUST={
 };
 const FACE={yes:{n:"肯"},no:{n:"唔肯"}};
 
+/* ===== 爆片公式：由 2026-10-19 實際讀取嘅 Instagram 數據歸納（詳見 research/benchmark-data.md） ===== */
+const FORMULAS={
+  sk:{n:"小劇場",ev:"@minibangkok「小姐要咩啊」22.4萬 view｜@ryanserhant 辦公室小劇場 2,538萬 view",how:["揀一個客人同你都會遇到嘅日常情境","第一秒直接出對白，唔使介紹自己","兩至三個來回，最後一句反轉或者笑位","舖頭、產品自然出現喺背景"]},
+  ch:{n:"路人挑戰 / 送嘢",ev:"@hang.hairstylist「隨機抽一位路人剪頭髮」66.3萬 view（帳號得 350 粉絲）",how:["街頭搵真路人，講明規則","開頭一句講晒挑戰內容","拍路人嘅真實反應","結尾講地址，邀請觀眾下次參加"]},
+  pov:{n:"POV / 熱門梗",ev:"@hang.hairstylist「交友 app 追路人睇我剪頭髮」28.1萬｜「POV：4蚊速剪 be like」16.8萬",how:["揀一個而家流行嘅聲音或者格式","字幕寫「POV：」加你行業嘅情境","表情同動作誇張少少","10–20 秒內完"]},
+  re:{n:"好奇問題 + 真實反應",ev:"@yia0701「台南最準命格解析」14.5萬｜@ryanserhant「回覆一封高過叫價 $5.5M 嘅 email」103.5萬",how:["開頭拋一條觀眾想知答案嘅問題","中間唔好太快講答案","拍真實嘅驚訝反應","最後先公佈答案"]},
+  day:{n:"老闆一日 / 幕後",ev:"@ryanserhant「Day in the life of a CEO」474萬｜@xway.marketing「窺探短影音公司內訓」4.7萬",how:["由一個時間開始（例如凌晨開舖）","每個畫面 1–2 秒，加時間字幕","中間有一個小意外或者辛苦位","結尾回到客人 / 成品"]}
+};
+const ANTI="優惠海報、純產品展示：@minibangkok 優惠海報只有 944–3,288 view；@hang.hairstylist 普通 before/after 只有 1,800–3,500 view。";
+/* 每個行業喺 5 個公式下嘅情境：[片名, 開頭第一句] */
+const SCEN={
+  food:{sk:["客人點餐超複雜，伙記一句收尾","「凍檸茶少甜少冰多檸，多士唔要皮，蛋要半熟但唔好流心⋯」"],ch:["請路人試新菜，唔好食唔使錢","「呢碟嘢，你話唔好食，我唔收你錢。」"],pov:["POV：［價錢］喺{dist}食餐 be like","「POV：喺{dist}用［價錢］食午餐⋯」"],re:["你估呢碟［招牌菜］要整幾耐？","「你估呢碟嘢，我哋要整幾耐？」"],day:["{biz}凌晨開舖嘅一日","「凌晨［幾點］，{dist}仲未醒，我哋已經開工。」"]},
+  beauty:{sk:["客人拎明星相嚟話要剪成咁","「我要剪到同佢一模一樣。」"],ch:["隨機抽一位路人免費改造","「隨機抽一位路人，免費幫佢改造。」"],pov:["POV：客人同你講「隨便剪啦」","「POV：客人坐低第一句就係『隨便剪啦』⋯」"],re:["改造完，佢屋企人認唔認得佢？","「改完之後，佢屋企人仲認唔認得佢？」"],day:["髮型師由開舖到收舖嘅一日","「一日做［X］個客，係咩感覺？」"]},
+  retail:{sk:["客人：「我隨便睇睇咋」（三十分鐘後）","「我隨便睇睇咋。」"],ch:["俾路人［價錢］喺舖頭任揀","「俾你［價錢］，喺我舖頭揀最抵嘅一樣。」"],pov:["POV：客人第五次拎起同一件嘢","「POV：你見到客人第五次拎起又放低⋯」"],re:["呢件嘢賣［價錢］，你覺得貴唔貴？","「呢件嘢賣［價錢］，你估點解？」"],day:["小店老闆入貨嘅一日","「今日帶你去入貨，睇吓啲貨點嚟。」"]},
+  property:{sk:["業主話「一蚊都唔減」","「業主話一蚊都唔減，咁你仲睇唔睇？」"],ch:["［預算］喺{dist}搵樓挑戰","「預算［金額］，喺{dist}可以租到 / 買到咩？」"],pov:["POV：睇樓遲到嘅客人","「POV：約咗三點，三點半先收到短訊話塞車⋯」"],re:["呢個盤叫價［金額］，你估成交價係幾多？","「叫價［金額］，你估最後幾錢成交？」"],day:["地產代理朝早到夜嘅一日","「朝早［幾點］到夜晚［幾點］，代理嘅一日。」"]},
+  finance:{sk:["朋友：「做保險㗎？咁你會唔會呃我？」","「做保險㗎？咁你會唔會呃我？」"],ch:["街訪：你知唔知自己有咩保障？","「隨機問路人：你知唔知自己有咩保障？」"],pov:["POV：過年親戚知道你做理財","「POV：過年親戚知道你做理財之後⋯」"],re:["月入［金額］，你會點分配？","「月入［金額］，你會點分？」"],day:["理財顧問嘅一日","「做理財顧問，一日見幾多個客？」"]},
+  edu:{sk:["家長：「做完功課未？」","「做完功課未？」「做⋯⋯緊。」"],ch:["街訪：呢條小學題你識唔識？","「呢條小學［科目］題，你識唔識答？」"],pov:["POV：考試前一晚先開書","「POV：明日考試，今晚先開書⋯」"],re:["學生上堂前後有咩分別？","「［X］個月前，佢一個字都唔敢講。」"],day:["導師由放學到夜晚嘅一日","「由放學到夜晚，導師嘅一日。」"]},
+  health:{sk:["客人：「我淨係坐得耐啲啫」","「我冇做運動喎，淨係坐得耐啲啫。」"],ch:["街訪：你邊度最痛？","「隨機問路人：你邊度最痛？」"],pov:["POV：喺{dist}對住電腦一日之後","「POV：喺{dist}返工，對住電腦一日之後⋯」"],re:["你睇手機嘅姿勢係咪咁？","「你而家睇緊手機嘅姿勢，係咪咁？」"],day:["治療師嘅一日","「一日幫［X］個人處理痛症，係咩感覺？」"]},
+  fitness:{sk:["朋友：「聽日先開始減肥」","「聽日先開始。」（第一百個聽日）"],ch:["路人挑戰：平板支撐一分鐘","「平板支撐一分鐘，撐到就送你一堂。」"],pov:["POV：第一次入 gym","「POV：第一次入 gym，唔知部機點用⋯」"],re:["你做深蹲係咪都係咁？","「你做深蹲，係咪都係咁？」"],day:["私人教練嘅一日","「朝早［幾點］開始，教練嘅一日。」"]},
+  pro:{sk:["客人：「報稅咋嘛，我自己做得啦」","「報稅咋嘛，我自己做得啦。」"],ch:["街訪：開公司第一步要做咩？","「隨機問路人：開公司第一步要做咩？」"],pov:["POV：截數前一日先收到單據","「POV：聽日截數，客人今晚先俾單據⋯」"],re:["一份合約，好多老闆都冇睇呢句","「呢一句，好多老闆簽約前都冇睇。」"],day:["［會計師 / 律師］嘅一日","「做［會計 / 律師］，一日係點過？」"]},
+  mfg:{sk:["客人：「可唔可以聽日交貨？」","「可唔可以聽日交？」"],ch:["你估呢件嘢第一步係點整？","「你估呢件嘢，第一步係點？」"],pov:["POV：收工前五分鐘收到急單","「POV：收工前五分鐘，收到急單⋯」"],re:["一件產品要經過幾多個工序？","「由原材料到出貨，要經過［X］個工序。」"],day:["師傅嘅一日","「做咗［X］年，師傅嘅一日。」"]},
+  travel:{sk:["住客 check in 嘅奇怪要求","「可唔可以俾間有海景、又平、又大嘅房？」"],ch:["［價錢］一晚可以住到咩？","「［價錢］一晚，可以住到咩？」"],pov:["POV：住客第三次問 late check out","「POV：住客第三次問有冇得 late check out⋯」"],re:["住咗兩晚都未必發現嘅地方","「住咗兩晚，你未必發現呢個地方。」"],day:["酒店員工嘅一日","「早餐［幾點］開始，我哋［幾點］已經開工。」"]},
+  tech:{sk:["老闆：「叫 AI 做咪得囉」","「老闆話：呢樣嘢叫 AI 做咪得囉。」"],ch:["挑戰：平時一個鐘嘅嘢［X］分鐘做完","「平時要一個鐘，用呢個［X］分鐘做唔做到？」"],pov:["POV：同事第十次叫你幫手","「POV：同事今日第十次叫你幫手⋯」"],re:["每個月對數，其實可以快幾多？","「每個月對數對到凌晨？睇吓呢個。」"],day:["窺探{biz}內部嘅一日","「窺探吓{biz}內部嘅一日。」"]},
+  reno:{sk:["業主：「預算唔多，但我要好靚」","「預算唔多，但我要好靚。」"],ch:["［預算］可唔可以裝到成間屋？","「［預算］，可唔可以裝到成間屋？」"],pov:["POV：裝到一半，業主話要改","「POV：裝到一半，業主話要改設計⋯」"],re:["業主第一次入返屋嘅真實反應","「業主第一次入返屋，係咩反應？」"],day:["裝修師傅開工嘅一日","「朝早［幾點］開工，裝修師傅嘅一日。」"]}
+};
+/* 特色決定公式優先次序 */
+const TRAIT_ORDER={value:"ch",story:"day",heritage:"day",photo:"re",team:"sk",unique:"re",premium:"re",handmade:"day"};
+/* 對標帳號（2026-10-19 核實） */
+const ACCTS=[
+  {h:"minibangkok",n:"小曼谷 Mini Bangkok",r:"香港",ind:["food"],f:"6,511",top:"22.4萬",note:"餐廳小劇場：拍拖、AA 制、請客"},
+  {h:"hang.hairstylist",n:"Hang｜尖沙咀髮型師",r:"香港",ind:["beauty"],f:"350",top:"66.3萬",note:"路人挑戰、熱門梗"},
+  {h:"weefedia.marketing",n:"weefedia",r:"香港",ind:[],f:"780",top:"66.3萬",note:"Gen Z 中小企行銷公司，幫客拍小劇場同挑戰"},
+  {h:"yia0701",n:"小雅｜台南短影音行銷",r:"台灣",ind:["food","retail","travel"],f:"7,997",top:"27.5萬",note:"主持人探店、好奇問題、真實反應"},
+  {h:"xway.marketing",n:"穿透行銷",r:"台灣",ind:["tech","pro"],f:"7,712",top:"4.7萬",note:"公司幕後、內訓窺探"},
+  {h:"ryanserhant",n:"Ryan Serhant",r:"美國",ind:["property","finance","pro"],f:"300萬",top:"2,538萬",note:"地產經紀：辦公室小劇場、老闆一日"},
+  {h:"vicblends",n:"VicBlends",r:"美國",ind:["beauty"],f:"500萬",top:"928.3萬",note:"理髮師個人品牌"}
+];
+
 /* 睇同行：Instagram hashtag（即時、唔會過時） */
 const TAGS={food:["香港美食","香港茶餐廳"],beauty:["香港髮型師","香港美容"],retail:["香港小店","香港網店"],property:["香港地產","香港睇樓"],
   finance:["香港理財","香港保險"],edu:["香港補習","香港興趣班"],health:["香港物理治療","香港痛症"],fitness:["香港健身","香港私人教練"],
@@ -333,10 +379,14 @@ function match(b){
 }
 
 function render(){
-  const I=IND[cur],b=readBg(),M=match(b);
-  const fmts=I.formats.map(f=>({n:f.n,len:f.len,hook:fill(f.hook,b),st:f.st,src:`${I.n}常用格式`}));
-  const all=[...M.topics,...fmts].slice(0,5);
+  const I=IND[cur],b=readBg(),M=match(b),S=SCEN[cur];
+  // 公式次序：由特色決定先後，其餘跟數據強弱
+  let order=["sk","ch","pov","re","day"];
+  const pri=[...new Set(b.traits.map(t=>TRAIT_ORDER[t]).filter(Boolean))];
+  order=[...pri,...order.filter(k=>!pri.includes(k))];
+  const all=order.map(k=>({k,f:FORMULAS[k],n:fill(S[k][0],b),hook:fill(S[k][1],b),why:pri.includes(k)?`配合你嘅特色「${b.traits.filter(t=>TRAIT_ORDER[t]===k).map(t=>TRAITS[t].n).join("、")}」`:""}));
   const tags=[...(b.online?[]:[b.dist+SHORT[cur]]),...TAGS[cur]];
+  const accts=[...ACCTS.filter(a=>a.ind.includes(cur)),...ACCTS.filter(a=>!a.ind.includes(cur))];
   $("#result").innerHTML=`
     <span class="step">配對結果</span>
     <h2>${esc(b.biz)}｜${esc(b.dist)}｜${I.n}</h2>
@@ -344,20 +394,26 @@ function render(){
     <h2 style="font-size:19px">你拍片嘅優勢</h2>
     <div class="advs">${M.advs.map(a=>`<div class="adv"><span class="from">來自：${esc(a.from)}</span><b>${esc(a.adv)}</b><span class="muted">${esc(a.why)}</span></div>`).join("")||`<p class="note">揀多啲特色，配對會更準。</p>`}</div>
     <h2 style="font-size:19px">為 ${esc(b.biz)} 度身嘅 5 條片</h2>
-    <div class="ideas">${all.map((f,i)=>`
+    <p class="note">每條片都用咗一個經數據證實會爆嘅公式，下面寫明參考邊個帳號。</p>
+    <div class="ideas">${all.map((t,i)=>`
       <div class="idea">
-        <div class="top"><span class="no">片 ${i+1}</span><span class="name">${esc(f.n)}</span>${f.len?`<span class="tag">${f.len}</span>`:""}</div>
-        <div class="hook"><b>開頭第一句可以咁講</b>${esc(f.hook)}</div>
-        <span class="src">${esc(f.src)}</span>
-        ${f.st?`<details><summary>點樣拍（JVM 會幫你拍）</summary><ol>${f.st.map(s=>`<li>${s}</li>`).join("")}</ol></details>`:""}
+        <div class="top"><span class="no">片 ${i+1}</span><span class="tag">${t.f.n}</span></div>
+        <span class="name">${esc(t.n)}</span>
+        <div class="hook"><b>開頭第一句</b>${esc(t.hook)}</div>
+        ${t.why?`<span class="src" style="color:var(--accent)">${esc(t.why)}</span>`:""}
+        <span class="src">數據參考：${t.f.ev}</span>
+        <details><summary>點樣拍（JVM 會幫你拍）</summary><ol>${t.f.how.map(s=>`<li>${s}</li>`).join("")}</ol></details>
       </div>`).join("")}</div>
     <p class="note">［ ］入面請填你自己嘅真實資料，唔好作數字。</p>
+    <div class="warn"><b>唔好淨係拍呢啲</b><br>${ANTI}</div>
     ${b.cust.length?`<h2 style="font-size:19px">針對你嘅客人</h2><ul class="tips">${b.cust.map(c=>`<li><b>${CUST[c].n}：</b>${esc(fill(CUST[c].tip,b))}</li>`).join("")}</ul>`:""}
-    ${b.face==="no"?`<p class="warn">唔出鏡都拍得：用手部特寫、產品同環境畫面，加旁白或者字幕。</p>`:""}
-    <h2 style="font-size:19px">睇吓同行點拍</h2>
-    ${(REFS[cur]||[]).length?`<div class="more">${REFS[cur].map(r=>`<div><a href="https://www.instagram.com/${r.h}/" target="_blank" rel="noopener"><b>@${r.h}</b></a><span class="muted">${r.why}</span></div>`).join("")}</div>`:""}
+    ${b.face==="no"?`<p class="warn">老闆唔出鏡都拍得：小劇場同挑戰可以由 JVM 安排演員或者 KOL 出鏡。</p>`:""}
+    <h2 style="font-size:19px">對標帳號（真實數據）</h2>
+    <div class="tablewrap"><table class="acct"><thead><tr><th>帳號</th><th>地區</th><th>粉絲</th><th>最高 Reels</th><th>值得學</th></tr></thead><tbody>
+      ${accts.map(a=>`<tr class="${a.ind.includes(cur)?"hit":""}"><td><a href="https://www.instagram.com/${a.h}/" target="_blank" rel="noopener">@${a.h}</a>${a.ind.includes(cur)?' <span class="pill">同行</span>':""}</td><td>${a.r}</td><td class="num">${a.f}</td><td class="num">${a.top}</td><td>${a.note}</td></tr>`).join("")}
+    </tbody></table></div>
+    <p class="note">數據喺 2026 年 10 月 19 日讀取。重點：hang.hairstylist 得 350 粉絲，都有一條片 66.3萬 view，即係爆唔爆睇內容，唔睇粉絲數。</p>
     <div class="contact">${tags.map(t=>`<a class="btn ghost" href="https://www.instagram.com/explore/tags/${encodeURIComponent(t)}/" target="_blank" rel="noopener">#${esc(t)}</a>`).join("")}</div>
-    <p class="note">撳落去會開 Instagram，睇同行用呢個 hashtag 出嘅片。</p>
     <div class="warn"><b>要小心</b><ul>${I.avoid.map(a=>`<li>${a}</li>`).join("")}</ul></div>
     <div><button class="btn ghost" type="button" id="copy">複製結果，WhatsApp 俾自己</button></div>`;
   $("#copy").onclick=()=>copy(b,M,all);
@@ -390,7 +446,7 @@ function renderJVM(b){
 function copy(b,M,all){
   const I=IND[cur];
   const L=[`【${b.biz}｜${b.dist}｜${I.n}】拍片配對結果`,"","你嘅優勢：",...M.advs.map(a=>`- ${a.adv}`),"","度身 5 條片："];
-  all.forEach((f,i)=>L.push(`${i+1}. ${f.n}`,`   開頭：${f.hook}`));
+  all.forEach((t,i)=>L.push(`${i+1}.【${t.f.n}】${t.n}`,`   開頭：${t.hook}`));
   if(b.cust.length)L.push("","針對客人：",...b.cust.map(c=>`- ${CUST[c].n}：${fill(CUST[c].tip,b)}`));
   L.push("",`BP 會員找 JVM 拍：WhatsApp ${JVM.waShow}｜IG ${JVM.ig}`);
   const txt=L.join("\n");
