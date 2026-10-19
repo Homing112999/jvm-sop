@@ -59,6 +59,24 @@ select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(-
 .adv .from{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.06em}
 .tips{margin:0;padding-left:20px;font-size:15px}
 .idea .src{font-size:12px;color:var(--muted)}
+.btn.go{width:100%;max-width:420px;font-size:18px;padding:16px;align-self:flex-start}
+.btn.go:disabled{opacity:.7;cursor:progress}
+.reveal{animation:rise .5s ease-out}
+@keyframes rise{from{opacity:.2;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.reveal{animation:none}}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chiphead{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:700;letter-spacing:.06em;margin-right:4px}
+.chip{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;padding:6px 12px;line-height:1.4}
+.chip b{font-size:14px}
+.chip small{font-size:11px;color:var(--muted)}
+.blank{border-bottom:2px dashed var(--accent);color:var(--accent);padding:0 2px;font-weight:700}
+.idea .top{align-items:center}
+.idea .row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.btn.wa{padding:8px 14px;font-size:14px}
+.idea details ol{font-size:14px}
+details.fold{border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+details.fold>summary{font-weight:700;font-size:16px;color:var(--ink)}
+details.fold[open]>summary{margin-bottom:10px}
 .plot{background:var(--bg);border-radius:8px;padding:10px 12px;font-size:14px;display:flex;flex-direction:column;gap:4px}
 .plot b{font-size:12px;color:var(--muted);font-weight:500;margin-right:8px}
 .plot ol{margin:0;padding-left:20px}
@@ -135,11 +153,12 @@ footer{color:var(--muted);font-size:12px;font-family:var(--mono);line-height:1.8
       <div class="f"><span class="lbl">主要客人係邊啲？<small>（可以揀多個）</small></span><div class="seg" id="cust"></div></div>
       <div class="f"><span class="lbl">老闆肯唔肯出鏡？</span><div class="seg" id="face"></div></div>
     </div>
+    <button class="btn go" type="button" id="go">開始配對</button>
   </section>
 
-  <section class="panel" id="result" aria-live="polite"></section>
+  <section class="panel" id="result" aria-live="polite" hidden></section>
 
-  <section class="panel jvm" id="jvm"></section>
+  <section class="panel jvm" id="jvm" hidden></section>
 
   <footer>由 JVM 內容行銷提供｜WhatsApp 9634 7605｜Justvibingmedia8@gmail.com｜IG @justvibing_media<br>題材按一般行業做法整理，唔代表保證成效。</footer>
 </div>
@@ -311,7 +330,6 @@ const FORMULAS={
   day:{n:"老闆一日 / 幕後",ev:"@ryanserhant「Day in the life of a CEO」474萬｜@xway.marketing「窺探短影音公司內訓」4.7萬",how:["由一個時間開始（例如凌晨開舖）","每個畫面 1–2 秒，加時間字幕","中間有一個小意外或者辛苦位","結尾回到客人 / 成品"]}
 };
 const ANTI="優惠海報、純產品展示：@minibangkok 優惠海報只有 944–3,288 view；@hang.hairstylist 普通 before/after 只有 1,800–3,500 view。";
-/* 每個行業喺 5 個公式下嘅情境：[片名, 開頭第一句] */
 /* 每個行業喺 5 個公式下嘅情境：[片名, 開頭第一句, 角色, 劇情（開場 → 互動 → 結尾）] */
 const SCEN={
   food:{
@@ -414,6 +432,7 @@ const TAGS={food:["香港美食","香港茶餐廳"],beauty:["香港髮型師","�
 const REFS={};
 
 const $=s=>document.querySelector(s);
+const bl=s=>esc(s).replace(/［(.*?)］/g,'<span class="blank">$1</span>');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let cur="food";
 function fillSeg(el,name,obj,checked,multi){el.innerHTML=Object.entries(obj).map(([k,v])=>`<input type="${multi?"checkbox":"radio"}" name="${name}" id="${name}-${k}" value="${k}"${checked.includes(k)?" checked":""}><label for="${name}-${k}">${v.n}</label>`).join("")}
@@ -426,6 +445,14 @@ $("#tiles").addEventListener("click",e=>{const b=e.target.closest("button");if(!
   document.querySelectorAll("#tiles button").forEach(x=>x.setAttribute("aria-pressed",x===b));render()});
 document.querySelector(".form").addEventListener("input",render);
 document.querySelector(".form").addEventListener("change",render);
+$("#go").addEventListener("click",()=>{
+  const go=$("#go"),reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+  go.disabled=true;go.textContent="配對緊⋯";
+  setTimeout(()=>{render();$("#result").hidden=false;$("#jvm").hidden=false;
+    $("#result").classList.remove("reveal");void $("#result").offsetWidth;$("#result").classList.add("reveal");
+    go.disabled=false;go.textContent="重新配對";
+    $("#result").scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"})},reduce?0:700);
+});
 
 function readBg(){
   const checked=n=>[...document.querySelectorAll(`input[name=${n}]:checked`)].map(i=>i.value);
@@ -457,35 +484,38 @@ function render(){
   const all=order.map(k=>({k,f:FORMULAS[k],n:fill(S[k][0],b),hook:fill(S[k][1],b),cast:S[k][2],plot:fill(S[k][3],b),why:pri.includes(k)?`配合你嘅特色「${b.traits.filter(t=>TRAIT_ORDER[t]===k).map(t=>TRAITS[t].n).join("、")}」`:""}));
   const tags=[...(b.online?[]:[b.dist+SHORT[cur]]),...TAGS[cur]];
   const accts=[...ACCTS.filter(a=>a.ind.includes(cur)),...ACCTS.filter(a=>!a.ind.includes(cur))];
+  const waBase=`你好，我係 BP 會員，${b.biz}（${b.dist}，${I.n}）。`;
+  const hasBlank=all.some(t=>/［/.test(t.n+t.hook+t.plot));
   $("#result").innerHTML=`
     <span class="step">配對結果</span>
     <h2>${esc(b.biz)}｜${esc(b.dist)}｜${I.n}</h2>
     <div class="why"><small>你行業嘅重點</small>${I.pain}</div>
-    <h2 style="font-size:19px">你拍片嘅優勢</h2>
-    <div class="advs">${M.advs.map(a=>`<div class="adv"><span class="from">來自：${esc(a.from)}</span><b>${esc(a.adv)}</b><span class="muted">${esc(a.why)}</span></div>`).join("")||`<p class="note">揀多啲特色，配對會更準。</p>`}</div>
+    <div class="chips" aria-label="你拍片嘅優勢"><span class="chiphead">你嘅優勢</span>${M.advs.map(a=>`<span class="chip" title="${esc(a.why)}"><b>${esc(a.adv)}</b><small>來自：${esc(a.from)}</small></span>`).join("")||`<span class="note">揀多啲特色，配對會更準。</span>`}</div>
     <h2 style="font-size:19px">為 ${esc(b.biz)} 度身嘅 5 條片</h2>
-    <p class="note">每條片都係有角色、有互動嘅劇情，唔係對住鏡頭講嘢；公式全部由真實爆片數據歸納。</p>
+    <p class="note">每條都係有角色、有互動嘅劇情，公式由真實爆片數據歸納。${hasBlank?'<span class="blank">虛線位</span>要填返你自己嘅真實資料。':""}</p>
     <div class="ideas">${all.map((t,i)=>`
       <div class="idea">
-        <div class="top"><span class="no">片 ${i+1}</span><span class="tag">${t.f.n}</span></div>
-        <span class="name">${esc(t.n)}</span>
-        <div class="hook"><b>開頭第一句</b>${esc(t.hook)}</div>
-        <div class="plot"><span><b>角色</b>${esc(t.cast)}</span><ol>${t.plot.split(/\s*→\s*/).map(x=>`<li>${esc(x)}</li>`).join("")}</ol></div>
-        ${t.why?`<span class="src" style="color:var(--accent)">${esc(t.why)}</span>`:""}
-        <span class="src">數據參考：${t.f.ev}</span>
-        <details><summary>點樣拍（JVM 會幫你拍）</summary><ol>${t.f.how.map(s=>`<li>${s}</li>`).join("")}</ol></details>
+        <div class="top"><span class="no">片 ${i+1}</span><span class="tag">${t.f.n}</span>${t.why?`<span class="src" style="color:var(--accent)">${esc(t.why)}</span>`:""}</div>
+        <span class="name">${bl(t.n)}</span>
+        <div class="hook"><b>開頭第一句</b>${bl(t.hook)}</div>
+        <div class="plot"><span><b>角色</b>${esc(t.cast)}</span><ol>${t.plot.split(/\s*→\s*/).map(x=>`<li>${bl(x)}</li>`).join("")}</ol></div>
+        <div class="row">
+          <a class="btn wa" href="https://wa.me/${JVM.wa}?text=${encodeURIComponent(waBase+`想 JVM 幫我拍呢條：「${t.n}」`)}" target="_blank" rel="noopener">想拍呢條？WhatsApp JVM</a>
+          <details><summary>點拍 + 數據參考</summary><ol>${t.f.how.map(s=>`<li>${s}</li>`).join("")}</ol><p class="src">數據參考：${t.f.ev}</p></details>
+        </div>
       </div>`).join("")}</div>
-    <p class="note">［ ］入面請填你自己嘅真實資料，唔好作數字。</p>
-    <div class="warn"><b>唔好淨係拍呢啲</b><br>${ANTI}</div>
-    ${b.cust.length?`<h2 style="font-size:19px">針對你嘅客人</h2><ul class="tips">${b.cust.map(c=>`<li><b>${CUST[c].n}：</b>${esc(fill(CUST[c].tip,b))}</li>`).join("")}</ul>`:""}
     ${b.face==="no"?`<p class="warn">老闆唔出鏡都拍得：小劇場同挑戰可以由 JVM 安排演員或者 KOL 出鏡。</p>`:""}
-    <h2 style="font-size:19px">對標帳號（真實數據）</h2>
-    <div class="tablewrap"><table class="acct"><thead><tr><th>帳號</th><th>地區</th><th>粉絲</th><th>最高 Reels</th><th>值得學</th></tr></thead><tbody>
-      ${accts.map(a=>`<tr class="${a.ind.includes(cur)?"hit":""}"><td><a href="https://www.instagram.com/${a.h}/" target="_blank" rel="noopener">@${a.h}</a>${a.ind.includes(cur)?' <span class="pill">同行</span>':""}</td><td>${a.r}</td><td class="num">${a.f}</td><td class="num">${a.top}</td><td>${a.note}</td></tr>`).join("")}
-    </tbody></table></div>
-    <p class="note">數據喺 2026 年 10 月 19 日讀取。重點：hang.hairstylist 得 350 粉絲，都有一條片 66.3萬 view，即係爆唔爆睇內容，唔睇粉絲數。</p>
-    <div class="contact">${tags.map(t=>`<a class="btn ghost" href="https://www.instagram.com/explore/tags/${encodeURIComponent(t)}/" target="_blank" rel="noopener">#${esc(t)}</a>`).join("")}</div>
-    <div class="warn"><b>要小心</b><ul>${I.avoid.map(a=>`<li>${a}</li>`).join("")}</ul></div>
+    <details class="fold"><summary>對標帳號（真實數據）</summary>
+      <div class="tablewrap"><table class="acct"><thead><tr><th>帳號</th><th>地區</th><th>粉絲</th><th>最高 Reels</th><th>值得學</th></tr></thead><tbody>
+        ${accts.map(a=>`<tr class="${a.ind.includes(cur)?"hit":""}"><td><a href="https://www.instagram.com/${a.h}/" target="_blank" rel="noopener">@${a.h}</a>${a.ind.includes(cur)?' <span class="pill">同行</span>':""}</td><td>${a.r}</td><td class="num">${a.f}</td><td class="num">${a.top}</td><td>${a.note}</td></tr>`).join("")}
+      </tbody></table></div>
+      <p class="note">數據喺 2026 年 10 月 19 日讀取。hang.hairstylist 得 350 粉絲，都有一條片 66.3萬 view：爆唔爆睇內容，唔睇粉絲數。</p>
+      <div class="contact">${tags.map(t=>`<a class="btn ghost" href="https://www.instagram.com/explore/tags/${encodeURIComponent(t)}/" target="_blank" rel="noopener">#${esc(t)}</a>`).join("")}</div>
+    </details>
+    ${b.cust.length?`<details class="fold"><summary>針對你嘅客人</summary><ul class="tips">${b.cust.map(c=>`<li><b>${CUST[c].n}：</b>${esc(fill(CUST[c].tip,b))}</li>`).join("")}</ul></details>`:""}
+    <details class="fold"><summary>要小心</summary>
+      <ul class="tips">${I.avoid.map(a=>`<li>${a}</li>`).join("")}<li>唔好淨係拍優惠海報同純產品展示。${ANTI.replace(/^[^：]*：/,"")}</li></ul>
+    </details>
     <div><button class="btn ghost" type="button" id="copy">複製結果，WhatsApp 俾自己</button></div>`;
   $("#copy").onclick=()=>copy(b,M,all);
   renderJVM(b);
